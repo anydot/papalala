@@ -1,0 +1,1 @@
+../pravidla.pl
