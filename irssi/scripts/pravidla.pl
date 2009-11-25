@@ -6,6 +6,7 @@ use Irssi::Irc;
 use LWP::UserAgent;
 use Cz::Cstocs;
 use URI::Escape;
+use Encode;
 
 use vars qw($VERSION %IRSSI);
 
@@ -21,12 +22,14 @@ our $to1250 = Cz::Cstocs->new(qw/utf8 1250/);
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
-	my $answer;
 
 	return unless $message =~ /^`pravidla\s+(.+)/;
 	
-	$answer = "$nick: ($1) ";
+	my $answer = sprintf "%s: (%s) ", $nick, decode_utf8($1);
 	my $word = uri_escape($to1250->($1));
+
+	decode_utf8
+	utf8::upgrade($answer);
 
 	######
 	my $ua = LWP::UserAgent->new(
