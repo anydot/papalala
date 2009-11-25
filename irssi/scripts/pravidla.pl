@@ -28,9 +28,6 @@ sub on_public {
 	my $answer = sprintf "%s: (%s) ", $nick, decode_utf8($1);
 	my $word = uri_escape($to1250->($1));
 
-	decode_utf8
-	utf8::upgrade($answer);
-
 	######
 	my $ua = LWP::UserAgent->new(
 		agent => "Mozilla 4/0",
