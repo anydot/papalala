@@ -18,12 +18,14 @@ $VERSION = '0.01';
 our %db;
 tie %db, "GDBM_File", Irssi::get_irssi_dir(). "/url.db", &GDBM_WRCREAT, 0644;
 
+#db format: "kanal:url" -> kdy, kdo, pocet (pocitano od nuly)
+
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_oldurl_ignore'));
 	return unless grep {$channel eq $_} split(/ /, Irssi::settings_get_str('bot_oldurl_channels'));
-	return unless $message =~ /((?:http|ftp):\/\/\S+)/i;
+	return unless $message =~ /((?:https?|ftp):\/\/\S+)/i;
 
 	my $url = $1;
 	my $key = "$channel:$url";
