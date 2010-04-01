@@ -1,8 +1,6 @@
 use strict;
 use warnings;
 
-use lib "/home/anydot/perl/share/perl/5.8.4/", "/home/anydot/perl/lib/perl/5.8.4/";
-
 use Irssi;
 use Irssi::Irc;
 use REST::Google::Search::Web;
@@ -30,7 +28,7 @@ sub on_public {
 	my $res = REST::Google::Search::Web->new(
 		q => $1,
 		hl => 'cs',
-		lr => 'lang_cs',
+#		lr => 'lang_cs',
 	);
 
 	if ($res->responseStatus != 200) {
