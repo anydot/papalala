@@ -22,6 +22,8 @@ our $to1250 = Cz::Cstocs->new(qw/utf8 1250/);
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ /^`pravidla\s+(.+)/;
 	
@@ -39,7 +41,7 @@ sub on_public {
 
 	my $response = $ua->get($url);
 	if ($response->is_error) {
-		$server->send_message($channel, "$nick: Error: ".$response->status_line, 0);
+		$server->send_message($dst, "$nick: Error: ".$response->status_line, 0);
 		return;
 	}
 
@@ -67,7 +69,8 @@ sub on_public {
 		$answer .= "Zadane slovo neni v pravidlech."
 	}
 	
-	$server->send_message($channel, $answer, 0);
+	$server->send_message($dst, $answer, 0);
 }
 
 Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message private', 'on_public');
