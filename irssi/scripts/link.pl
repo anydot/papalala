@@ -24,8 +24,9 @@ our $selectall = $dbh->prepare("SELECT DISTINCT url FROM link WHERE url LIKE ? O
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $private = !defined $channel;
 
-	return unless grep {$channel eq $_} split(/ /, Irssi::settings_get_str('bot_link_channels'));
+	return unless !defined $channel or grep {$channel eq $_} split(/ /, Irssi::settings_get_str('bot_link_channels'));
 
 	if ($message =~ /^[`!]l(?:ink)?\s*(.*)$/) {
 		my $query = $1;
@@ -33,6 +34,12 @@ sub on_public {
 		my $maxlen = 497; ## 510 - length of ":! PRIVMSG :"
 		my $msg = "$nick:";
 		my $st;
+
+		if ($private) {
+			($channel, $query) = split /\s/, $query, 2;
+
+			$query //= '';
+		}
 
 		if ($query =~ /^\*\s*(.*)/) {
 			($st = $selectall)->execute("%$1%");
@@ -64,9 +71,9 @@ sub on_public {
 
 		$msg .= $postfix;
 
-		$server->send_message($channel, $msg, 0);
+		$server->send_message($private ? $nick : $channel, $msg, 0);
 	}
-	else {
+	elsif (!$private) {
 		while ($message =~ /((?:https?|ftp):\/\/\S+)/gi) {
 			$insert->execute(lc $channel, $1);
 		}
@@ -74,6 +81,7 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message private', 'on_public');
 
 Irssi::settings_add_str('bot', 'bot_link_channels', '');
 
