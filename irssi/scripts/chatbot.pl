@@ -21,8 +21,6 @@ $VERSION = '0.01';
 
 our $megahal;
 
-our %lastmsg;
-
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $mynick = $server->{nick};
@@ -30,14 +28,8 @@ sub on_public {
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
 
-	my $greet = (time - ($lastmsg{$channel} || 0)) > Irssi::settings_get_int('bot_megahal_lastmsgtime');
-
-
-	if ($message =~ /^\s*$mynick\s*[,:]\s*(.*)$/i or $greet) {
-		$server->send_message($channel, "$nick: ".megahal_response($greet ? $message : $1), 0); # send back to channel
-	}
-	
-	$lastmsg{$channel} = time;
+	return unless $message =~ /^\s*$mynick[,:]\s*(.*)$/i;
+	$server->send_message($channel, "$nick: ".megahal_response($1), 0); # send back to channel
 }
 
 sub megahal_response {
@@ -74,4 +66,3 @@ Irssi::signal_add('message public', 'on_public');
 
 Irssi::settings_add_str('bot', 'bot_megahal', 'localhost:4566');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
-Irssi::settings_add_int('bot', 'bot_megahal_lastmsgtime', '7200');
