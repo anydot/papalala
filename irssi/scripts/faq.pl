@@ -22,10 +22,11 @@ $dbh->{mysql_auto_reconnect} = 1;
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $isprivate = !defined $channel;
 	my $receiver = ($isprivate ? $nick : $channel);
 
-	if ($message =~ s/^`faq\s+add\s+//i) {
+	if ($message =~ s/^${cp}faq\s+add\s+//i) {
 		my $stm = $dbh->prepare("INSERT INTO faq (question) VALUES (?)");
 		$stm->execute($message);
 
@@ -33,7 +34,7 @@ sub on_public {
 		
 		$server->send_message($receiver, "$nick: Novy faq #$id byl uspesne zalozen", $isprivate);
 	}
-	elsif ($message =~ s/^`faq\s+answer\s+(\d+)\s+//i) {
+	elsif ($message =~ s/^${cp}faq\s+answer\s+(\d+)\s+//i) {
 		my $id = $1;
 		my $stm = $dbh->prepare("SELECT 1 FROM faq WHERE id = ?");
 		$stm->execute($id);
@@ -47,7 +48,7 @@ sub on_public {
 		$dbh->do("INSERT INTO faq_answer (faqid, answer) VALUES (?, ?)", {}, $id, $message);
 		$server->send_message($receiver, "$nick: Odpoved na faq #$1 byla uspesne vlozena", $isprivate);
 	}
-	elsif ($message =~ /^`faq\s+(\d+)(?:\s+>>\s+(\S+))?\s*$/) {
+	elsif ($message =~ /^${cp}faq\s+(\d+)(?:\s+>>\s+(\S+))?\s*$/) {
 		my ($question) = $dbh->selectrow_array("SELECT question FROM faq WHERE id = ?", {}, $1);
 		my $redirect = (defined $2 && !$isprivate ? "$2: " : "");
 
@@ -58,7 +59,7 @@ sub on_public {
 			$server->send_message($receiver, "${redirect}http://www.redrum.cz/faq/$1/ -- FAQ #$1: $question", $isprivate);
 		}
 	}
-	elsif ($message =~ /^`faq\s+tag\s+(\d+)\s+(\w+)\s*$/) {
+	elsif ($message =~ /^${cp}faq\s+tag\s+(\d+)\s+(\w+)\s*$/) {
 		my ($tagname, $faqid) = (lc $2, $1);
 		my ($exists) = $dbh->selectrow_array("SELECT 1 FROM faq WHERE id = ?", {}, $faqid);
 
@@ -77,3 +78,5 @@ sub on_public {
 
 Irssi::signal_add('message public', 'on_public');
 Irssi::signal_add('message private', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

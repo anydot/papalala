@@ -29,9 +29,10 @@ sub on_setup_changed {
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my ($twmsg);
 
-	return unless ($twmsg) = $message =~ /^`tw(?:itter)?(?:\s+(.+))?$/;
+	return unless ($twmsg) = $message =~ /^${cp}tw(?:itter)?(?:\s+(.+))?$/;
 
 	if (defined $twmsg) {
 		$twmsg =~ /^((?:[@#]\w+\s+)*)(.*)$/;
@@ -61,6 +62,7 @@ sub on_public {
 Irssi::signal_add('message public', \&on_public);
 Irssi::signal_add('setup changed', \&on_setup_changed);
 
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
 Irssi::settings_add_str('bot', 'bot_twitter_username', '');
 Irssi::settings_add_str('bot', 'bot_twitter_password', '');
 

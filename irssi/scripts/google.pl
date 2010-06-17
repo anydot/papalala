@@ -20,10 +20,11 @@ REST::Google::Search->http_referer("http://www.redrum.cz");
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $answer;
 	my @resp;
 
-	return unless $message =~ /^`g(?:oogle)?\s+(.*)$/i;
+	return unless $message =~ /^${cp}g(?:oogle)?\s+(.*)$/i;
 
 	my $res = REST::Google::Search::Web->new(
 		q => $1,
@@ -60,3 +61,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

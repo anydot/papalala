@@ -16,8 +16,9 @@ $VERSION = '0.01';
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 
-	return unless $message =~ /^`bofh/;
+	return unless $message =~ /^${cp}bofh/;
 
 	open my $efile, "<", Irssi::get_irssi_dir() . "/bofh" or return;
 	my @excuses = <$efile>;
@@ -29,3 +30,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

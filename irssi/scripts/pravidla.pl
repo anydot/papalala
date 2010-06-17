@@ -22,10 +22,11 @@ our $to1250 = Cz::Cstocs->new(qw/utf8 1250/);
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $isprivate = !defined $channel;
 	my $dst = $isprivate ? $nick : $channel;
 
-	return unless $message =~ /^`pravidla\s+(.+)/;
+	return unless $message =~ /^${cp}pravidla\s+(.+)/;
 	
 	my $answer = sprintf "%s: (%s) ", $nick, decode_utf8($1);
 	my $word = uri_escape($to1250->($1));
@@ -74,3 +75,5 @@ sub on_public {
 
 Irssi::signal_add('message public', 'on_public');
 Irssi::signal_add('message private', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

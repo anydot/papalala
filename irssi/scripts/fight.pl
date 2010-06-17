@@ -20,13 +20,14 @@ REST::Google::Search->http_referer("http://www.redrum.cz");
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $answer;
 	my @resp;
 	my @questions;
 	my @no;
 	my ($max, $maxpos) = (0, undef);
 
-	return unless $message =~ /^`fight\s+(.+)$/i;
+	return unless $message =~ /^${cp}fight\s+(.+)$/i;
 	@questions = split(/\s*--+\s*/, $1);
 	
 	foreach my $question (@questions) {
@@ -58,3 +59,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

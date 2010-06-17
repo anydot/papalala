@@ -23,9 +23,10 @@ our $tolatin2 = Cz::Cstocs->new(qw/utf8 il2/)
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $answer;
 
-	return unless $message =~ /^`scs\s+(.+)\s*$/;
+	return unless $message =~ /^${cp}scs\s+(.+)\s*$/;
 	
 	$answer = "$nick: ($1) ";
 	my $word = uri_escape($tolatin2->($1));
@@ -65,3 +66,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

@@ -19,10 +19,11 @@ our ($lastt) = 0;
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $answer;
 	my @parts;
 
-	return unless $message =~ s/^`decide\s*//;
+	return unless $message =~ s/^${cp}decide\s*//;
 	my $time = time();
 	if ($time - $lastt > 60*60*48) {
 		$lastt = $time;
@@ -53,3 +54,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

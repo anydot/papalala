@@ -19,8 +19,9 @@ $VERSION = '0.01';
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
+	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 
-	return unless $message =~ /^`engrish\s+(.+)\s*$/;
+	return unless $message =~ /^${cp}engrish\s+(.+)\s*$/;
 	my $text = $1;
 
 	my $de = REST::Google::Translate->new(
@@ -43,3 +44,5 @@ sub on_public {
 }
 
 Irssi::signal_add('message public', 'on_public');
+
+Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
