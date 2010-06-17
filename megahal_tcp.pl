@@ -6,6 +6,9 @@ use strict;
 use Megahal;
 use IO::Socket::INET;
 
+our $save_interval = 3600;
+our $save_last = time;
+
 Megahal::megahal_initialize(); ## must be first, to avoid lockup of irssi counterpart
 
 my $socket = IO::Socket::INET->new(
@@ -31,6 +34,13 @@ while (my $client = $socket->accept) {
 		print "Responding with: $response";
 		
 		$client->printflush($response);
+
+		# Save brain
+		if ($save_last + $save_interval < time) {
+			Megahal::megahal_cleanup();
+			Megahal::megahal_initialize();
+			$save_last = time;
+		}
 	}
 }
 
