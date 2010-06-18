@@ -29,7 +29,7 @@ sub event_public {
 
 	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		# TODO
-		my @slabels = qw(letters words actions smileys kicks modes topics seconds);
+		my @slabels = qw(letters words actions smileys kicks modes topics time);
 		if ($2 eq 'stat') {
 			$user = $3 if $3;
 			# create empty stats record for the user in order
@@ -40,6 +40,8 @@ sub event_public {
 			if (not defined $stats[0]) {
 				$server->send_message($channel, "$user: no such file or directory", 0);
 			} else {
+				$stats[Stats::SECONDS] = format_time($stats[Stats::SECONDS]);
+				$slabels[Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
 				$server->send_message($channel, "$user: ".join(', ', @stats), 0);
 			}
@@ -64,6 +66,39 @@ sub event_public {
 	}
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
+}
+
+sub format_time {
+        use integer;
+
+        my $t = shift;
+        my $r = "ouch, can't format that time";
+
+        if ($t >= 0) {
+                $r = sprintf "%i", $t % 60;
+                $t /= 60;
+        }
+        if ($t > 0) {
+                $r = sprintf "%i.%s", $t % 60, $r;
+                $t /= 60;
+        }
+        if ($t > 0) {
+                $r = sprintf "%i:%s", $t % 24, $r;
+                $t /= 24;
+        }
+        if ($t > 0) {
+                $r = sprintf "%id %s", $t % 31, $r;
+                $t /= 31;
+        }
+        if ($t > 0) {
+                $r = sprintf "%im %s", $t % 12, $r;
+                $t /= 12;
+        }
+        if ($t > 0) {
+                $r = sprintf "%iy %s", $t, $r;
+        }
+
+        return $r;
 }
 
 Irssi::signal_add_last('message public', 'event_public');
