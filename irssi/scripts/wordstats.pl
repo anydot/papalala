@@ -32,7 +32,7 @@ sub event_public {
 	if ($message =~ /^${cp}([twmy]?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		my ($period, $cmd, $param) = ($1, $2, $3);
 		my $since = $period ? time - $times{$period} : 0;
-		my @slabels = $stats->rows(); $slabels[Stats::SECONDS] = "time";
+		my @slabels = $stats->rows(); $slabels[&Stats::SECONDS] = "time";
 		if ($cmd eq 'stat') {
 			$user = $param if $param;
 			# create empty stats record for the user in order
@@ -43,8 +43,8 @@ sub event_public {
 			if (not defined $stats[0]) {
 				$server->send_message($channel, "$user: no such file or directory", 0);
 			} else {
-				$stats[Stats::SECONDS] = format_time($stats[Stats::SECONDS]);
-				$slabels[Stats::SECONDS] = "time spent";
+				$stats[&Stats::SECONDS] = format_time($stats[&Stats::SECONDS]);
+				$slabels[&Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
 				my $vocab = $stats->uvocab($user, $channel, $since);
 				$server->send_message($channel, "$user$pnames{$period}: ".join(', ', @stats).", vocabulary $vocab words", 0);
@@ -89,23 +89,23 @@ sub event_public {
 	foreach my $word (split(/\W+/, $message)) {
 		next unless $word;
 		$stats->recword(time, $user, $channel, $word);
-		$stats[Stats::WORDS]++;
-		$stats[Stats::LETTERS] += length $word;
+		$stats[&Stats::WORDS]++;
+		$stats[&Stats::LETTERS] += length $word;
 	}
 	# Count smileys
 	my @smileys = (':-)', ':)', ';)', ';-)', ';p', '*g*', 'X)', '.)', '\')', '^_^', ':D', ':>', ':->', ':-D', ':-P', ':]', ':-]', '\']', '.]', ';]', ':P', '=)', '=]', ';D', ':o)', ':o]', ':^)', '(-:', ':oD', 'rotgl', 'rotfl', 'lol', 'heh', 'haha', 'lmao');
 	foreach my $smiley (@smileys) {
 		$a = -1;
 		while (($a = index($message, $smiley, $a + 1)) >= 0) {
-			$stats[Stats::SMILEYS]++;
+			$stats[&Stats::SMILEYS]++;
 		}
 	}
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
 
 	my @ustats2 = $stats->ustat($user, $channel, time - $times{t});
-	if (defined $ustats[Stats::WORDS] and
-	    int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
+	if (defined $ustats[&Stats::WORDS] and
+	    int($ustats2[&Stats::WORDS] / 1000) > int($ustats[&Stats::WORDS] / 1000)) {
 		# The user entered his next thousand right now. Cheer him on!
 		my @addr = ("broucku", "kotatko", "cicinko", "fifinko", "brouci", "broucku", "princatko", "broucku", "drobecku", "myspuldo", "jenicku", "marenko", "brouci", "muciqu ;*", "ty, ty... ty...", "moje nejmilejsi hracko", "stenatko", "rootiku", "l33t h4x0r3");
 		my @msgs = (
@@ -124,7 +124,7 @@ sub event_public {
 			'%u: Prave jsi dosahlo TRI TISICE SLOV - jsi fakt dobre, %a!',
 			"\%u: \2CTYRI TISICE SLOV\2. Channel pwnz0r3d, l33t.",
 		);
-		my $th = ($ustats2[Stats::WORDS] / 1000);
+		my $th = ($ustats2[&Stats::WORDS] / 1000);
 		my $m;
 		if ($th > $#msgs) {
 			$m = "($user stale flooduje a flooduje, az to uz vtipne neni. ".($th*1000)." slov, nuda.)";
@@ -139,7 +139,7 @@ sub event_public {
 			$m =~ s/%a/$addr/g;
 		}
 		$server->send_message($channel, $m, 0);
-		if (!($ustats2[Stats::WORDS] % 1000)) {
+		if (!($ustats2[&Stats::WORDS] % 1000)) {
 			$server->send_message($channel, "$user: HEADSHOT! r0xx0r \\o/", 0);
 		}
 	}
@@ -152,7 +152,7 @@ sub event_mode {
 
 	my @stats = $stats->zstats();
 	$mode =~ s/[+-]//g;
-	$stats[Stats::MODES] += length $mode;
+	$stats[&Stats::MODES] += length $mode;
 	$stats->recstat(time, $nick, $channel, @stats);
 }
 
@@ -161,7 +161,7 @@ sub event_kick {
 	my ($channel, $nick_kicked) = split(/ /, $data);
 
 	my @stats = $stats->zstats();
-	$stats[Stats::KICKS]++;
+	$stats[&Stats::KICKS]++;
 	$stats->recstat(time, $nick, $channel, @stats);
 }
 
@@ -170,7 +170,7 @@ sub event_topic {
 	my ($channel, $topic) = split(/ :/, $data, 2);	
 
 	my @stats = $stats->zstats();
-	$stats[Stats::TOPICS]++;
+	$stats[&Stats::TOPICS]++;
 	$stats->recstat(time, $nick, $channel, @stats);
 }
 
@@ -178,7 +178,7 @@ sub event_action {
 	my ($server, $message, $nick, $addr, $channel) = @_;
 
 	my @stats = $stats->zstats();
-	$stats[Stats::ACTIONS]++;
+	$stats[&Stats::ACTIONS]++;
 	$stats->recstat(time, $nick, $channel, @stats);
 }
 
@@ -222,6 +222,8 @@ Irssi::signal_add_last('event topic', 'event_topic');
 Irssi::signal_add_last('ctcp action', 'event_action');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
+
+1;
 
 package Stats;
 
