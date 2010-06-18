@@ -97,7 +97,7 @@ sub event_public {
 	if (defined $ustats[Stats::WORDS] and
 	    int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
 		# The user entered his next thousand right now. Cheer him on!
-		my @addr = ("broucku", "kotatko", "cicinko", "fifinko", "brouci", "broucku", "zlutasku", "princatko", "broucku", "drobecku", "myspuldo", "jenicku", "marenko", "broucku", "brouci", "paroubecku", "ty, ty... ty...", "moje nejmilejsi hracko", "broucku");
+		my @addr = ("broucku", "kotatko", "cicinko", "fifinko", "brouci", "broucku", "princatko", "broucku", "drobecku", "myspuldo", "jenicku", "marenko", "brouci", "muciqu ;*", "ty, ty... ty...", "moje nejmilejsi hracko", "stenatko", "rootiku", "l33t h4x0r3");
 		my @msgs = (
 			'%u: brrrrm...', # should never trigger
 			[
