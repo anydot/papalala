@@ -25,9 +25,12 @@ sub event_public {
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 
 	my $user = $nick; # TODO
+	my %times = (t => 86400, w => 7*86400, m => 31*86400, y => 365*86400);
+	my %pnames = ('' => '', t => ' today', w => ' this week', m => ' this month', y => ' this year');
 
-	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
-		my ($today, $cmd, $param) = ($1, $2, $3);
+	if ($message =~ /^${cp}([twmy]?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
+		my ($period, $cmd, $param) = ($1, $2, $3);
+		my $since = $period ? time - $times{$period} : 0;
 		my @slabels = $stats->rows(); $slabels[Stats::SECONDS] = "time";
 		if ($cmd eq 'stat') {
 			$user = $param if $param;
@@ -35,14 +38,14 @@ sub event_public {
 			# to update the number of seconds
 			$stats->recstat(time, $user, $channel, $stats->zstats());
 
-			my @stats = $stats->ustat($user, $channel, $today eq 't' ? time - 86400 : 0);
+			my @stats = $stats->ustat($user, $channel, $since);
 			if (not defined $stats[0]) {
 				$server->send_message($channel, "$user: no such file or directory", 0);
 			} else {
 				$stats[Stats::SECONDS] = format_time($stats[Stats::SECONDS]);
 				$slabels[Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
-				my $vocab = $stats->uvocab($user, $channel, $today eq 't' ? time - 86400 : 0);
+				my $vocab = $stats->uvocab($user, $channel, $since);
 				$server->send_message($channel, "$user: ".join(', ', @stats).", vocabulary $vocab words", 0);
 			}
 
@@ -53,10 +56,10 @@ sub event_public {
 
 			my @top;
 			if ($cat eq 'vocabulary') {
-				@top = @{$stats->topvocab($channel, $today eq 't' ? time - 86400 : 0)};
+				@top = @{$stats->topvocab($channel, $since)};
 			} else {
 				my $rawcat = $cat eq 'time' ? 'seconds' : $cat;
-				@top = @{$stats->topstat($rawcat, $channel, $today eq 't' ? time - 86400 : 0)};
+				@top = @{$stats->topstat($rawcat, $channel, $since)};
 				if ($cat eq 'time') {
 					@top = map { [ $_->[0], format_time($_->[1]) ] } @top;
 				}
@@ -66,10 +69,10 @@ sub event_public {
 			$a = $e-9;
 			my $msg = join(', ', map { sprintf '%d. %s (%s)', $a++, $_->[0], $_->[1] } @top);
 
-			$server->send_message($channel, "Top$e $cat ".($today eq 't' ? 'today ' : '')."($channel): $msg", 0);
+			$server->send_message($channel, "Top$e $cat$pnames{$period} ($channel): $msg", 0);
 
 		} elsif ($cmd eq 'stathelp') {
-			$server->send_message($channel, "[t](top10,20,30|stat|stathelp) <".join(' ',@slabels,'vocabulary').">", 0);
+			$server->send_message($channel, "[twmy](top10,20,30|stat|stathelp) <".join(' ',@slabels,'vocabulary').">", 0);
 
 		} else {
 			$server->send_message($channel, "$user: brm", 0);
@@ -77,7 +80,7 @@ sub event_public {
 		return;
 	}
 
-	my @ustats = $stats->ustat($user, $channel, time - 86400);
+	my @ustats = $stats->ustat($user, $channel, time - $times{t});
 	my @stats = $stats->zstats();
 
 	$stats->{dbh}->do('BEGIN TRANSACTION');
@@ -90,7 +93,7 @@ sub event_public {
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
 
-	my @ustats2 = $stats->ustat($user, $channel, time - 86400);
+	my @ustats2 = $stats->ustat($user, $channel, time - $times{t});
 	if (defined $ustats[Stats::WORDS] and
 	    int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
 		# The user entered his next thousand right now. Cheer him on!
