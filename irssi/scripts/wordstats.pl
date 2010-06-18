@@ -42,7 +42,8 @@ sub event_public {
 				$stats[Stats::SECONDS] = format_time($stats[Stats::SECONDS]);
 				$slabels[Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
-				$server->send_message($channel, "$user: ".join(', ', @stats), 0);
+				my $vocab = $stats->uvocab($user, $channel, $today eq 't' ? time - 86400 : 0);
+				$server->send_message($channel, "$user: ".join(', ', @stats).", vocabulary $vocab words", 0);
 			}
 
 		} elsif ($cmd =~ /top([123]0)/) {
@@ -51,9 +52,14 @@ sub event_public {
 			$cat = $param if $param;
 			$cat = 'seconds' if $cat eq 'time';
 
-			my @top = @{$stats->topstat($cat, $channel, $today eq 't' ? time - 86400 : 0)};
-			if ($cat eq 'seconds') {
-				@top = map { [ $_->[0], format_time($_->[1]) ] } @top;
+			my @top;
+			if ($cat eq 'vocabulary') {
+				@top = @{$stats->topvocab($channel, $today eq 't' ? time - 86400 : 0)};
+			} else {
+				@top = @{$stats->topstat($cat, $channel, $today eq 't' ? time - 86400 : 0)};
+				if ($cat eq 'seconds') {
+					@top = map { [ $_->[0], format_time($_->[1]) ] } @top;
+				}
 			}
 
 			@top = splice(@top, $e-10, 10);
@@ -63,7 +69,7 @@ sub event_public {
 			$server->send_message($channel, "Top$e $cat ".($today eq 't' ? 'today ' : '')."($channel): $msg", 0);
 
 		} elsif ($cmd eq 'stathelp') {
-			$server->send_message($channel, "[t](top10,20,30|stat|stathelp) <".join(' ',@slabels).">", 0);
+			$server->send_message($channel, "[t](top10,20,30|stat|stathelp) <".join(' ',@slabels,'vocabulary').">", 0);
 
 		} else {
 			$server->send_message($channel, "$user: brm", 0);
@@ -192,6 +198,9 @@ sub new {
 		$this->{"qtopstat$_"} = $this->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time > ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
 	}
 
+	$this->{qgetvocab} = $this->{dbh}->prepare("SELECT count(*) FROM words WHERE user = ? AND channel = ? AND network = ? AND last > ?");
+	$this->{qtopvocab} = $this->{dbh}->prepare("SELECT user, count(*) AS s FROM words WHERE channel = ? AND network = ? AND last > ? GROUP BY user ORDER BY s DESC LIMIT ?");
+
 	$this->{userseconds} = {};
 
 	bless $this, $class;
@@ -239,6 +248,20 @@ sub topstat {
 	my ($cat, $channel, $since) = @_;
 	$this->execute_rows('qtopstat'.$cat, $channel, 'IRCnet', $since, ((1<<31)-1), 30);
 	$this->{"qtopstat$cat"}->fetchall_arrayref;
+}
+
+sub uvocab {
+	my $this = shift;
+	my ($user, $channel, $since) = @_;
+	$this->execute_rows('qgetvocab', $user, $channel, 'IRCnet', $since);
+	($this->{qgetvocab}->fetchrow_array())[0];
+}
+
+sub topvocab {
+	my $this = shift;
+	my ($channel, $since) = @_;
+	$this->execute_rows('qtopvocab', $channel, 'IRCnet', $since, 30);
+	$this->{qtopvocab}->fetchall_arrayref;
 }
 
 1;
