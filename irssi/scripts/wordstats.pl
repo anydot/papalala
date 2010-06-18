@@ -27,10 +27,11 @@ sub event_public {
 
 	my $user = $nick; # TODO
 
-	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)\b/) {
+	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		# TODO
 		my @slabels = qw(letters words actions smileys kicks modes topics seconds);
 		if ($2 eq 'stat') {
+			$user = $3 if $3;
 			# create empty stats record for the user in order
 			# to update the number of seconds
 			$stats->recstat(time, $user, $channel, $stats->zstats());
