@@ -46,7 +46,7 @@ sub event_public {
 				$slabels[Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
 				my $vocab = $stats->uvocab($user, $channel, $since);
-				$server->send_message($channel, "$user: ".join(', ', @stats).", vocabulary $vocab words", 0);
+				$server->send_message($channel, "$user$pnames{$period}: ".join(', ', @stats).", vocabulary $vocab words", 0);
 			}
 
 		} elsif ($cmd =~ /top([123]0)/) {
