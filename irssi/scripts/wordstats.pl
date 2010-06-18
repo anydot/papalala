@@ -55,6 +55,7 @@ sub event_public {
 		return;
 	}
 
+	my @ustats = $stats->ustat($user, $channel, time - 86400);
 	my @stats = $stats->zstats();
 
 	$stats->{dbh}->do('BEGIN TRANSACTION');
@@ -66,6 +67,46 @@ sub event_public {
 	}
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
+
+	my @ustats2 = $stats->ustat($user, $channel, time - 86400);
+	if (int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
+		# The user entered his next thousand right now. Cheer him on!
+		my @addr = ("broucku", "kotatko", "cicinko", "fifinko", "brouci", "broucku", "zlutasku", "princatko", "broucku", "drobecku", "myspuldo", "jenicku", "marenko", "broucku", "brouci", "paroubecku", "ty, ty... ty...", "moje nejmilejsi hracko", "broucku");
+		my @msgs = (
+			'%u: brrrrm...', # should never trigger
+			[
+			'%u: Vlezly botik Ti gratuluje k tisici slovum, kterymi jsi nas zde dnes jiz kolektivne obstastnilo, %a.',
+			'%u: Gratuluji, vyhralos dva virtualni duhove medvidky haribo za svoji tisickovku slov, %a.',
+			'%u jede, uz ma dneska tisic slov. Do toho, %a!',
+			'%u se dneska nejak rozkecal. Uz ma tisic slov.',
+			'%u: Drz uz svuj rozmily zobacek, %a.',
+			'%u: Vsiml sis, %a, ze uz mas dneska 10^3 slov?',
+			'%u: Bla bla bla bla bla bla bla... (x1000)',
+			'M4W1A<W1N>6-H(\'!R=FYI8V@@=&ES:6,@<VQO=B!P<F5J92!K;VQE:W1I=B!I&9&QE<G4*',
+			],
+			'%u: Dva tisice slov. Dneska jsi to poradne rozjelo, %a.',
+			'%u: Prave jsi dosahlo TRI TISICE SLOV - jsi fakt dobre, %a!',
+			"\%u: \2CTYRI TISICE SLOV\2. Channel pwnz0r3d, l33t.",
+		);
+		my $th = ($ustats2[Stats::WORDS] / 1000);
+		my $m;
+		if ($th > $#msgs) {
+			$m = "($user stale flooduje a flooduje, az to uz vtipne neni. ".($th*1000)." slov, nuda.)";
+		} else {
+			if (ref($msgs[$th]) eq 'ARRAY') {
+				$m = $msgs[$th]->[int(rand(@{$msgs[$th]}))];
+			} else {
+				$m = $msgs[$th];
+			}
+			my $addr = $addr[int(rand(@addr))];
+			$m =~ s/%u/$user/g;
+			$m =~ s/%a/$addr/g;
+		}
+		$server->send_message($channel, $m, 0);
+		if (!($ustats2[Stats::WORDS] % 1000)) {
+			$server->send_message($channel, "$user: HEADSHOT! r0xx0r \\o/", 0);
+		}
+	}
 }
 
 sub format_time {
