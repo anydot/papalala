@@ -1,6 +1,5 @@
 # TODO: Count also other stats than WORDS, LETTERS, SECONDS.
 # TODO: Track users across nick changes.
-# TODO: TopN commands.
 # TODO: Shakedown stats records.
 
 use strict;
@@ -29,7 +28,7 @@ sub event_public {
 
 	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		my ($today, $cmd, $param) = ($1, $2, $3);
-		my @slabels = qw(letters words actions smileys kicks modes topics time);
+		my @slabels = $stats->rows(); $slabels[Stats::SECONDS] = "time";
 		if ($cmd eq 'stat') {
 			$user = $param if $param;
 			# create empty stats record for the user in order
@@ -45,6 +44,23 @@ sub event_public {
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
 				$server->send_message($channel, "$user: ".join(', ', @stats), 0);
 			}
+
+		} elsif ($cmd =~ /top([123]0)/) {
+			my $e = $1;
+			my $cat = 'words';
+			$cat = $param if $param;
+			$cat = 'seconds' if $cat eq 'time';
+
+			my @top = @{$stats->topstat($cat, $channel, $today eq 't' ? time - 86400 : 0)};
+			if ($cat eq 'seconds') {
+				@top = map { [ $_->[0], format_time($_->[1]) ] } @top;
+			}
+
+			@top = splice(@top, $e-10, 10);
+			$a = $e-9;
+			my $msg = join(', ', map { sprintf '%d. %s (%s)', $a++, $_->[0], $_->[1] } @top);
+
+			$server->send_message($channel, "Top$e $cat ".($today eq 't' ? 'today ' : '')."($channel): $msg", 0);
 
 		} elsif ($cmd eq 'stathelp') {
 			$server->send_message($channel, "[t](top10,20,30|stat|stathelp) <".join(' ',@slabels).">", 0);
@@ -157,6 +173,7 @@ sub MODES {5};
 sub TOPICS {6};
 sub SECONDS {7};
 sub zstats { (0,0,0,0,0,0,0,0); }
+sub rows { qw(letters words actions smileys kicks modes topics seconds); }
 
 sub new {
 	my $class = shift;
@@ -171,6 +188,9 @@ sub new {
 	$this->{qrecstat} = $this->{dbh}->prepare("INSERT INTO stats (letters,words,actions,smileys,kicks,modes,topics,seconds, user,channel,network,time,timespan) VALUES (?,?,?,?,?,?,?,?, ?,?,?,?,?)");
 
 	$this->{qgetstat} = $this->{dbh}->prepare("SELECT sum(letters), sum(words), sum(actions), sum(smileys), sum(kicks), sum(modes), sum(topics), sum(seconds) FROM stats WHERE user = ? AND channel = ? AND network = ? AND time > ? AND time + timespan < ?");
+	foreach (rows()) {
+		$this->{"qtopstat$_"} = $this->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time > ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
+	}
 
 	$this->{userseconds} = {};
 
@@ -212,6 +232,13 @@ sub ustat {
 	my ($user, $channel, $since) = @_;
 	$this->execute_rows('qgetstat', $user, $channel, 'IRCnet', $since, ((1<<31)-1));
 	$this->{qgetstat}->fetchrow_array;
+}
+
+sub topstat {
+	my $this = shift;
+	my ($cat, $channel, $since) = @_;
+	$this->execute_rows('qtopstat'.$cat, $channel, 'IRCnet', $since, ((1<<31)-1), 30);
+	$this->{"qtopstat$cat"}->fetchall_arrayref;
 }
 
 1;
