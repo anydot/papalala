@@ -1,4 +1,4 @@
-# TODO: Count also stats ACTIONS, SMILEYS, KICKS, TOPICS
+# TODO: Count also stats ACTIONS, KICKS, TOPICS
 # TODO: Track users across nick changes.
 # TODO: Shakedown stats records.
 
@@ -84,11 +84,20 @@ sub event_public {
 	my @stats = $stats->zstats();
 
 	$stats->{dbh}->do('BEGIN TRANSACTION');
+	# Count words
 	foreach my $word (split(/\W+/, $message)) {
 		next unless $word;
 		$stats->recword(time, $user, $channel, $word);
 		$stats[Stats::WORDS]++;
 		$stats[Stats::LETTERS] += length $word;
+	}
+	# Count smileys
+	my @smileys = (':-)', ':)', ';)', ';-)', ';p', '*g*', 'X)', '.)', '\')', '^_^', ':D', ':>', ':->', ':-D', ':-P', ':]', ':-]', '\']', '.]', ';]', ':P', '=)', '=]', ';D', ':o)', ':o]', ':^)', '(-:', ':oD', 'rotgl', 'rotfl', 'lol', 'heh', 'haha', 'lmao');
+	foreach my $smiley (@smileys) {
+		$a = -1;
+		while (($a = index($message, $smiley, $a + 1)) >= 0) {
+			$stats[Stats::SMILEYS]++;
+		}
 	}
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
