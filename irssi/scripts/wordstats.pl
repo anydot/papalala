@@ -1,4 +1,4 @@
-# TODO: Count also other stats than WORDS, LETTERS, SECONDS.
+# TODO: Count also stats ACTIONS, SMILEYS, KICKS, TOPICS
 # TODO: Track users across nick changes.
 # TODO: Shakedown stats records.
 
