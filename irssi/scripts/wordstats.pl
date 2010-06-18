@@ -28,15 +28,15 @@ sub event_public {
 	my $user = $nick; # TODO
 
 	if ($message =~ /^${cp}(t?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
-		# TODO
+		my ($today, $cmd, $param) = ($1, $2, $3);
 		my @slabels = qw(letters words actions smileys kicks modes topics time);
-		if ($2 eq 'stat') {
-			$user = $3 if $3;
+		if ($cmd eq 'stat') {
+			$user = $param if $param;
 			# create empty stats record for the user in order
 			# to update the number of seconds
 			$stats->recstat(time, $user, $channel, $stats->zstats());
 
-			my @stats = $stats->ustat($user, $channel, $1 eq 't' ? time - 86400 : 0);
+			my @stats = $stats->ustat($user, $channel, $today eq 't' ? time - 86400 : 0);
 			if (not defined $stats[0]) {
 				$server->send_message($channel, "$user: no such file or directory", 0);
 			} else {
@@ -46,7 +46,7 @@ sub event_public {
 				$server->send_message($channel, "$user: ".join(', ', @stats), 0);
 			}
 
-		} elsif ($2 eq 'stathelp') {
+		} elsif ($cmd eq 'stathelp') {
 			$server->send_message($channel, "[t](top10,20,30|stat|stathelp) <".join(' ',@slabels).">", 0);
 
 		} else {
