@@ -50,14 +50,14 @@ sub event_public {
 			my $e = $1;
 			my $cat = 'words';
 			$cat = $param if $param;
-			$cat = 'seconds' if $cat eq 'time';
 
 			my @top;
 			if ($cat eq 'vocabulary') {
 				@top = @{$stats->topvocab($channel, $today eq 't' ? time - 86400 : 0)};
 			} else {
-				@top = @{$stats->topstat($cat, $channel, $today eq 't' ? time - 86400 : 0)};
-				if ($cat eq 'seconds') {
+				my $rawcat = $cat eq 'time' ? 'seconds' : $cat;
+				@top = @{$stats->topstat($rawcat, $channel, $today eq 't' ? time - 86400 : 0)};
+				if ($cat eq 'time') {
 					@top = map { [ $_->[0], format_time($_->[1]) ] } @top;
 				}
 			}
