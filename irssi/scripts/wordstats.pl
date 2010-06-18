@@ -1,4 +1,4 @@
-# TODO: Count also stats ACTIONS, KICKS, TOPICS
+# TODO: Count also stats ACTIONS, TOPICS
 # TODO: Track users across nick changes.
 # TODO: Shakedown stats records.
 
@@ -155,6 +155,15 @@ sub event_mode {
 	$stats->recstat(time, $nick, $channel, @stats);
 }
 
+sub event_kick {
+	my ($server, $data, $nick, $addr) = @_;
+	my ($channel, $nick_kicked) = split(/ /, $data);
+
+	my @stats = $stats->zstats();
+	$stats[Stats::KICKS]++;
+	$stats->recstat(time, $nick, $channel, @stats);
+}
+
 sub format_time {
         use integer;
 
@@ -190,6 +199,7 @@ sub format_time {
 
 Irssi::signal_add_last('message public', 'event_public');
 Irssi::signal_add_last('event mode', 'event_mode');
+Irssi::signal_add_last('event kick', 'event_kick');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
 
