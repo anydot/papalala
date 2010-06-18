@@ -1,3 +1,5 @@
+# See /wordstats.sql for db schema to be used for sqlite initialization.
+
 # TODO: Track users across nick changes.
 # TODO: Shakedown stats records.
 
