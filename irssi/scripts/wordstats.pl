@@ -91,7 +91,8 @@ sub event_public {
 	$stats->{dbh}->do('COMMIT TRANSACTION');
 
 	my @ustats2 = $stats->ustat($user, $channel, time - 86400);
-	if (int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
+	if (defined $ustats[Stats::WORDS] and
+	    int($ustats2[Stats::WORDS] / 1000) > int($ustats[Stats::WORDS] / 1000)) {
 		# The user entered his next thousand right now. Cheer him on!
 		my @addr = ("broucku", "kotatko", "cicinko", "fifinko", "brouci", "broucku", "zlutasku", "princatko", "broucku", "drobecku", "myspuldo", "jenicku", "marenko", "broucku", "brouci", "paroubecku", "ty, ty... ty...", "moje nejmilejsi hracko", "broucku");
 		my @msgs = (
