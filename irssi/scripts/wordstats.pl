@@ -241,84 +241,84 @@ sub rows { qw(letters words actions smileys kicks modes topics seconds); }
 sub new {
 	my $class = shift;
 	my ($dbfile) = @_;
-	my $this = {};
+	my $self = {};
 
-	$this->{dbh} = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "") or
+	$self->{dbh} = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "") or
 		die ("Can't open DB: $!");
-	$this->{qupword} = $this->{dbh}->prepare("UPDATE words SET hits = hits + 1, last = ? WHERE user=? AND channel=? AND network=? AND word=?");
-	$this->{qrecword} = $this->{dbh}->prepare("INSERT INTO words (hits,last,user,channel,network,word) VALUES (1,?,?,?,?,?)");
-	$this->{qupstat} = $this->{dbh}->prepare("UPDATE stats SET letters=letters+?, words=words+?, actions=actions+?, smileys=smileys+?, kicks=kicks+?, modes=modes+?, topics=topics+?, seconds=seconds+? WHERE user=? AND channel=? AND network=? AND time=? AND timespan=?");
-	$this->{qrecstat} = $this->{dbh}->prepare("INSERT INTO stats (letters,words,actions,smileys,kicks,modes,topics,seconds, user,channel,network,time,timespan) VALUES (?,?,?,?,?,?,?,?, ?,?,?,?,?)");
+	$self->{qupword} = $self->{dbh}->prepare("UPDATE words SET hits = hits + 1, last = ? WHERE user=? AND channel=? AND network=? AND word=?");
+	$self->{qrecword} = $self->{dbh}->prepare("INSERT INTO words (hits,last,user,channel,network,word) VALUES (1,?,?,?,?,?)");
+	$self->{qupstat} = $self->{dbh}->prepare("UPDATE stats SET letters=letters+?, words=words+?, actions=actions+?, smileys=smileys+?, kicks=kicks+?, modes=modes+?, topics=topics+?, seconds=seconds+? WHERE user=? AND channel=? AND network=? AND time=? AND timespan=?");
+	$self->{qrecstat} = $self->{dbh}->prepare("INSERT INTO stats (letters,words,actions,smileys,kicks,modes,topics,seconds, user,channel,network,time,timespan) VALUES (?,?,?,?,?,?,?,?, ?,?,?,?,?)");
 
-	$this->{qgetstat} = $this->{dbh}->prepare("SELECT sum(letters), sum(words), sum(actions), sum(smileys), sum(kicks), sum(modes), sum(topics), sum(seconds) FROM stats WHERE user = ? AND channel = ? AND network = ? AND time > ? AND time + timespan < ?");
+	$self->{qgetstat} = $self->{dbh}->prepare("SELECT sum(letters), sum(words), sum(actions), sum(smileys), sum(kicks), sum(modes), sum(topics), sum(seconds) FROM stats WHERE user = ? AND channel = ? AND network = ? AND time > ? AND time + timespan < ?");
 	foreach (rows()) {
-		$this->{"qtopstat$_"} = $this->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time > ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
+		$self->{"qtopstat$_"} = $self->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time > ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
 	}
 
-	$this->{qgetvocab} = $this->{dbh}->prepare("SELECT count(*) FROM words WHERE user = ? AND channel = ? AND network = ? AND last > ?");
-	$this->{qtopvocab} = $this->{dbh}->prepare("SELECT user, count(*) AS s FROM words WHERE channel = ? AND network = ? AND last > ? GROUP BY user ORDER BY s DESC LIMIT ?");
+	$self->{qgetvocab} = $self->{dbh}->prepare("SELECT count(*) FROM words WHERE user = ? AND channel = ? AND network = ? AND last > ?");
+	$self->{qtopvocab} = $self->{dbh}->prepare("SELECT user, count(*) AS s FROM words WHERE channel = ? AND network = ? AND last > ? GROUP BY user ORDER BY s DESC LIMIT ?");
 
-	$this->{userseconds} = {};
+	$self->{userseconds} = {};
 
-	bless $this, $class;
+	bless $self, $class;
 }
 
 sub execute_rows {
-	my $this = shift;
+	my $self = shift;
 	my ($q, @par) = @_;
-	$this->{$q}->execute(@par);
-	return $this->{$q}->rows;
+	$self->{$q}->execute(@par);
+	return $self->{$q}->rows;
 }
 
 sub recword {
-	my $this = shift;
+	my $self = shift;
 	my ($t, $user, $channel, $word) = @_;
 	$word = lc $word;
-	$this->execute_rows('qupword', $t, $user, $channel, 'IRCnet', $word) or
-		$this->execute_rows('qrecword', $t, $user, $channel, 'IRCnet', $word);
+	$self->execute_rows('qupword', $t, $user, $channel, 'IRCnet', $word) or
+		$self->execute_rows('qrecword', $t, $user, $channel, 'IRCnet', $word);
 }
 
 sub recstat {
-	my $this = shift;
+	my $self = shift;
 	my ($t, $user, $channel, @stats) = @_;
 
-	my $tl = ($this->{userseconds}->{$user} and $this->{userseconds}->{$user}->{$channel});
+	my $tl = ($self->{userseconds}->{$user} and $self->{userseconds}->{$user}->{$channel});
 	$tl and $stats[SECONDS] = $t - $tl;
-	$this->{userseconds}->{$user}->{$channel} = $t;
+	$self->{userseconds}->{$user}->{$channel} = $t;
 
 	my $gran = 60;
 	my $gt = int($t / $gran) * $gran;
 
-	$this->execute_rows('qupstat', @stats, $user, $channel, 'IRCnet', $gt, $gran) or
-		$this->execute_rows('qrecstat', @stats, $user, $channel, 'IRCnet', $gt, $gran);
+	$self->execute_rows('qupstat', @stats, $user, $channel, 'IRCnet', $gt, $gran) or
+		$self->execute_rows('qrecstat', @stats, $user, $channel, 'IRCnet', $gt, $gran);
 }
 
 sub ustat {
-	my $this = shift;
+	my $self = shift;
 	my ($user, $channel, $since) = @_;
-	$this->execute_rows('qgetstat', $user, $channel, 'IRCnet', $since, ((1<<31)-1));
-	$this->{qgetstat}->fetchrow_array;
+	$self->execute_rows('qgetstat', $user, $channel, 'IRCnet', $since, ((1<<31)-1));
+	$self->{qgetstat}->fetchrow_array;
 }
 
 sub topstat {
-	my $this = shift;
+	my $self = shift;
 	my ($cat, $channel, $since) = @_;
-	$this->execute_rows('qtopstat'.$cat, $channel, 'IRCnet', $since, ((1<<31)-1), 30);
-	$this->{"qtopstat$cat"}->fetchall_arrayref;
+	$self->execute_rows('qtopstat'.$cat, $channel, 'IRCnet', $since, ((1<<31)-1), 30);
+	$self->{"qtopstat$cat"}->fetchall_arrayref;
 }
 
 sub uvocab {
-	my $this = shift;
+	my $self = shift;
 	my ($user, $channel, $since) = @_;
-	$this->execute_rows('qgetvocab', $user, $channel, 'IRCnet', $since);
-	($this->{qgetvocab}->fetchrow_array())[0];
+	$self->execute_rows('qgetvocab', $user, $channel, 'IRCnet', $since);
+	($self->{qgetvocab}->fetchrow_array())[0];
 }
 
 sub topvocab {
-	my $this = shift;
+	my $self = shift;
 	my ($channel, $since) = @_;
-	$this->execute_rows('qtopvocab', $channel, 'IRCnet', $since, 30);
-	$this->{qtopvocab}->fetchall_arrayref;
+	$self->execute_rows('qtopvocab', $channel, 'IRCnet', $since, 30);
+	$self->{qtopvocab}->fetchall_arrayref;
 }
 
 1;
