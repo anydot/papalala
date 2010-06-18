@@ -135,6 +135,17 @@ sub event_public {
 	}
 }
 
+sub event_mode {
+	my ($server, $data, $nick, $addr) = @_;
+	my ($channel, $mode, @args) = split(/ /, $data);
+	return if ($nick eq $server->{nick});
+
+	my @stats = $stats->zstats();
+	$mode =~ s/[+-]//g;
+	$stats[Stats::MODES] += length $mode;
+	$stats->recstat(time, $nick, $channel, @stats);
+}
+
 sub format_time {
         use integer;
 
@@ -169,6 +180,7 @@ sub format_time {
 }
 
 Irssi::signal_add_last('message public', 'event_public');
+Irssi::signal_add_last('event mode', 'event_mode');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
 
