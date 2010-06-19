@@ -3,6 +3,8 @@ use warnings;
 
 use Irssi;
 use Safe;
+use BSD::Resource;
+use POSIX qw/:sys_wait_h raise/;
 
 use vars qw($VERSION %IRSSI);
 
@@ -20,16 +22,38 @@ sub on_public {
 
 	return unless $message =~ s/^${cp}calc\s+//;
 
-	my $compartment = new Safe();
-	# padany is crucial for Safe to work at all
-	$compartment->permit_only(qw(:base_core :base_math join padany));
+	pipe my $rh, my $wh;
+	my $pid = fork;
 
-	my $result = $compartment->reval($message);
-	if(not defined $result) {
-		$result = "N/A";
-	} else {
-		$result =~ s/[\x00\x0a\x0c\x0d]/./g;
+	if (!defined $pid) {
+		die "Can't fork";
 	}
+	elsif ($pid == 0) {
+		setrlimit(RLIMIT_CPU, 1, 1);
+		setrlimit(RLIMIT_RSS, 30_000_000, 30_000_000);
+		close $rh;
+
+		my $compartment = new Safe();
+		# padany is crucial for Safe to work at all
+		$compartment->permit_only(qw(:base_core :base_math join padany));
+
+		my $result = $compartment->reval($message);
+		if(defined $result) {
+			$result =~ s/[\x00\x0a\x0c\x0d]/./g;
+			print $wh $result;
+		}
+
+		close $wh;
+
+		raise 9; # exit 'gracefully' :-P -- so irssi will not mess-up with us
+	}
+
+	close $wh;
+
+	my $result = <$rh>;
+	$result //= "N/A";
+
+	waitpid $pid, 0; # collect forked son
 
 	$server->send_message($channel, "$nick: $result", 0);
 }
