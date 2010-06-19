@@ -27,6 +27,8 @@ sub on_public {
 	my $result = $compartment->reval($message);
 	if(not defined $result) {
 		$result = "N/A";
+	} else {
+		$result =~ s/[\x00\x0a\x0c\x0d]/./g;
 	}
 
 	$server->send_message($channel, "$nick: $result", 0);
