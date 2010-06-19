@@ -119,7 +119,7 @@ sub event_public {
 			'%u: Drz uz svuj rozmily zobacek, %a.',
 			'%u: Vsiml sis, %a, ze uz mas dneska 10^3 slov?',
 			'%u: Bla bla bla bla bla bla bla... (x1000)',
-			'M4W1A<W1N>6-H(\'!R=FYI8V@@=&ES:6,@<VQO=B!P<F5J92!K;VQE:W1I=B!I&9&QE<G4*',
+			'%u: M4W1A<W1N>6-H(\'!R=FYI8V@@=&ES:6,@<VQO=B!P<F5J92!K;VQE:W1I=B!I&9&QE<G4*',
 			],
 			'%u: Dva tisice slov. Dneska jsi to poradne rozjelo, %a.',
 			'%u: Prave jsi dosahlo TRI TISICE SLOV - jsi fakt dobre, %a!',
