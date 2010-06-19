@@ -35,7 +35,7 @@ sub on_public {
 
 		my $compartment = new Safe();
 		# padany is crucial for Safe to work at all
-		$compartment->permit_only(qw(:base_core :base_math join padany));
+		$compartment->permit_only(qw(:base_core :base_math :base_loop :base_mem padany));
 
 		my $result = $compartment->reval($message);
 		if(defined $result) {
