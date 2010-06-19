@@ -24,6 +24,9 @@ sub on_public {
 	# padany is crucial for Safe to work at all
 	$compartment->permit_only(qw(:base_core :base_math join padany));
 	$compartment->deny(qw(entersub)); # recursion problem
+	$compartment->deny(qw(vec)); # arbitrary string size
+	$compartment->deny(qw(aelem aslice)); # arbitrary array size
+	$compartment->deny(qw(flip flop)); # arbitrary list size (range)
 
 	my $result = $compartment->reval($message);
 	if(not defined $result) {
