@@ -39,8 +39,9 @@ sub on_public {
 
 		my $result = $compartment->reval($message);
 		if(defined $result) {
-			$result =~ s/[\x00\x0a\x0c\x0d]/./g;
 			print $wh $result;
+		} else {
+			print $wh "N/A ($@)";
 		}
 
 		close $wh;
@@ -52,6 +53,7 @@ sub on_public {
 
 	my $result = <$rh>;
 	$result //= "N/A";
+	$result =~ s/[\x00\x0a\x0c\x0d]/./g;
 
 	waitpid $pid, 0; # collect forked son
 
