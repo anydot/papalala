@@ -9,9 +9,9 @@ CREATE TABLE channels (
 );
 
 CREATE TABLE stats (
-	user INT REFERENCES users (name) ON DELETE CASCADE,
-	channel INT REFERENCES channels (name) ON DELETE CASCADE,
-	network INT REFERENCES channels (network) ON DELETE CASCADE,
+	user TEXT REFERENCES users (name) ON DELETE CASCADE,
+	channel TEXT REFERENCES channels (name) ON DELETE CASCADE,
+	network TEXT REFERENCES channels (network) ON DELETE CASCADE,
 	-- [time, time + timespan] time period
 	time INT,
 	timespan INT,
@@ -29,9 +29,9 @@ CREATE TABLE stats (
 );
 
 CREATE TABLE words (
-	user INT REFERENCES users (name) ON DELETE CASCADE,
-	channel INT REFERENCES channels (name) ON DELETE CASCADE,
-	network INT REFERENCES channels (network) ON DELETE CASCADE,
+	user TEXT REFERENCES users (name) ON DELETE CASCADE,
+	channel TEXT REFERENCES channels (name) ON DELETE CASCADE,
+	network TEXT REFERENCES channels (network) ON DELETE CASCADE,
 	word TEXT,
 
 	hits INT,
