@@ -5,6 +5,8 @@ use Irssi;
 use Safe;
 use BSD::Resource;
 use POSIX qw/:sys_wait_h raise/;
+use List::Util;
+use List::MoreUtils;
 
 use vars qw($VERSION %IRSSI);
 
@@ -36,6 +38,8 @@ sub on_public {
 		my $compartment = new Safe();
 		# padany is crucial for Safe to work at all
 		$compartment->permit_only(qw(:base_core :base_math :base_loop :base_mem padany));
+		$compartment->share_from('List::Util', [qw(first max maxstr min minstr reduce shuffle sum)]);
+		$compartment->share_from('List::MoreUtils', [qw(any all none notall true false firstidx first_index lastidx last_index insert_after insert_after_string apply after after_incl before before_incl indexes firstval first_value lastval last_value each_array each_arrayref pairwise natatime mesh zip uniq minmax)]);
 
 		my $result = $compartment->reval($message);
 		if(defined $result) {
