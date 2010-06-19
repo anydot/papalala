@@ -23,6 +23,7 @@ sub on_public {
 	my $compartment = new Safe();
 	# padany is crucial for Safe to work at all
 	$compartment->permit_only(qw(:base_core :base_math join padany));
+	$compartment->deny(qw(entersub)); # recursion problem
 
 	my $result = $compartment->reval($message);
 	if(not defined $result) {
