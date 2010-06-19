@@ -26,7 +26,8 @@ sub event_public {
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 
 	my $user = $nick; # TODO
-	my %times = (t => time - 86400, w => time - 7*86400, m => time - 31*86400, y => time - 365*86400);
+	my %times = (t => int((time - 5*3600) / 86400) * 86400 + 5*3600, # times{t}: last 5am
+		w => time - 7*86400, m => time - 31*86400, y => time - 365*86400);
 	my %pnames = ('' => '', t => ' today', w => ' this week', m => ' this month', y => ' this year');
 
 	if ($message =~ /^${cp}([twmy]?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
