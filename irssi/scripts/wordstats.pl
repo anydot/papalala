@@ -26,12 +26,12 @@ sub event_public {
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 
 	my $user = $nick; # TODO
-	my %times = (t => 86400, w => 7*86400, m => 31*86400, y => 365*86400);
+	my %times = (t => time - 86400, w => time - 7*86400, m => time - 31*86400, y => time - 365*86400);
 	my %pnames = ('' => '', t => ' today', w => ' this week', m => ' this month', y => ' this year');
 
 	if ($message =~ /^${cp}([twmy]?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		my ($period, $cmd, $param) = ($1, $2, $3);
-		my $since = $period ? time - $times{$period} : 0;
+		my $since = $period ? $times{$period} : 0;
 		my @slabels = $stats->rows(); $slabels[&Stats::SECONDS] = "time";
 		if ($cmd eq 'stat') {
 			$user = $param if $param;
@@ -81,7 +81,7 @@ sub event_public {
 		return;
 	}
 
-	my @ustats = $stats->ustat($user, $channel, time - $times{t});
+	my @ustats = $stats->ustat($user, $channel, $times{t});
 	my @stats = $stats->zstats();
 
 	$stats->{dbh}->do('BEGIN TRANSACTION');
@@ -103,7 +103,7 @@ sub event_public {
 	$stats->recstat(time, $user, $channel, @stats);
 	$stats->{dbh}->do('COMMIT TRANSACTION');
 
-	my @ustats2 = $stats->ustat($user, $channel, time - $times{t});
+	my @ustats2 = $stats->ustat($user, $channel, $times{t});
 	if (defined $ustats[&Stats::WORDS] and
 	    int($ustats2[&Stats::WORDS] / 1000) > int($ustats[&Stats::WORDS] / 1000)) {
 		# The user entered his next thousand right now. Cheer him on!
