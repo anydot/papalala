@@ -13,9 +13,11 @@ $VERSION = '0.01';
     license     => 'BSD',
 );
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ s/^${cp}warehouse//;
 
@@ -35,8 +37,8 @@ sub on_public {
 
 	if(not $page)
 	{
-		$server->send_message($channel, "$nick: The doors of the warehouse are shut still and cannot be opened.", 0);
-		$server->send_message($channel, "$nick: You hear very strange sounds from the inside and suddenly feel very uneasy.", 0);
+		$server->send_message($dst, "$nick: The doors of the warehouse are shut still and cannot be opened.", 0);
+		$server->send_message($dst, "$nick: You hear very strange sounds from the inside and suddenly feel very uneasy.", 0);
 		return;
 	}
 
@@ -48,11 +50,11 @@ sub on_public {
 	$intro =~ s/this floor/floor #$level/i;
 	if(not $intro)
 	{
-		$server->send_message($channel, "$nick: You attempt to open a box, but it is jammed shut too tightly.", 0);
-		$server->send_message($channel, "$nick: A note on the box says \"out of order\".", 0);
+		$server->send_message($dst, "$nick: You attempt to open a box, but it is jammed shut too tightly.", 0);
+		$server->send_message($dst, "$nick: A note on the box says \"out of order\".", 0);
 		return;
 	}
-	$server->send_message($channel, "$nick: $intro", 0);
+	$server->send_message($dst, "$nick: $intro", 0);
 
 	# Get the good stuff
 	my $str;
@@ -66,9 +68,10 @@ sub on_public {
 	# Word wrapping, perl style
 	# $width = 380;
 	# $str =~ s/(?:^|\G\n?)(?:(.{1,$width})(?:\s|\n|$)|(\S{$width})|\n)/$1$2\n/sg;
-	$server->send_message($channel, "$nick: $str", 0);
+	$server->send_message($dst, "$nick: $str", 0);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

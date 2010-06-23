@@ -17,10 +17,12 @@ $VERSION = '0.01';
 
 our %lastres; # indexed by region
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
 	my $rcount = Irssi::settings_get_str('bot_idos_results');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ s/^${cp}(idos|dpp|idosr)(next)?\b\s*//;
 
@@ -41,7 +43,7 @@ sub on_public {
 		my @args = split /\s*--\s*/, $message;
 
 		if ($#args < 1) {
-			$server->send_message($channel, "$nick: $cp(idos | dpp | idosr REGION) from[;fromalt;fromalt2] -- to[;...] [-- thru[;...]]", 0);
+			$server->send_message($dst, "$nick: $cp(idos | dpp | idosr REGION) from[;fromalt;fromalt2] -- to[;...] [-- thru[;...]]", 0);
 			return;
 		}
 
@@ -54,7 +56,7 @@ sub on_public {
 		my $q = IDOS::RouteQuery->new(%par);
 		$r = [ $q->execute() ];
 		if ($#$r < 0) {
-			$server->send_message($channel, "$nick: no results", 0);
+			$server->send_message($dst, "$nick: no results", 0);
 			return;
 		}
 		$lastres{$region} = $r;
@@ -62,7 +64,7 @@ sub on_public {
 	} else {
 		$r = $lastres{$region};
 		if ($#$r < 0) {
-			$server->send_message($channel, "$nick: no more results", 0);
+			$server->send_message($dst, "$nick: no more results", 0);
 			return;
 		}
 	}
@@ -79,11 +81,12 @@ sub on_public {
 		}
 		$o .= sprintf '%s ', $cl->[$#$cl]->dest() if $#$cl >= 0;
 		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())), $res->detail();
-		$server->send_message($channel, "$nick: $o", 0);
+		$server->send_message($dst, "$nick: $o", 0);
 	}
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
 Irssi::settings_add_str('bot', 'bot_idos_results', '2');

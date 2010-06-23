@@ -18,9 +18,11 @@ $VERSION = '0.01';
     license     => 'BSD',
 );
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ s/^${cp}calc\s+//;
 
@@ -67,9 +69,10 @@ sub on_public {
 
 	waitpid $pid, 0; # collect forked son
 
-	$server->send_message($channel, "$nick: $result", 0);
+	$server->send_message($dst, "$nick: $result", 0);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

@@ -13,9 +13,11 @@ $VERSION = '0.01';
     license     => 'BSD',
 );
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ s/^${cp}skladiste//;
 
@@ -33,7 +35,7 @@ sub on_public {
 
 	if(not $page)
 	{
-		$server->send_message($channel, "$nick: Dvere skladiste jsou zamcene. Zevnitr slysis podivne zvuky a nahle se citis velice nesvuj.", 0);
+		$server->send_message($dst, "$nick: Dvere skladiste jsou zamcene. Zevnitr slysis podivne zvuky a nahle se citis velice nesvuj.", 0);
 		return;
 	}
 
@@ -41,12 +43,12 @@ sub on_public {
 		my ($pos, $lev) = ($page =~ m#<p>Pozice <span title=".*?">(.+?)</span>, (.+?). police</p>#i);
 		if(not $pos or not $lev)
 		{
-			$server->send_message($channel, "$nick: Pokusil jsi se otevrit jednu z krabic, ale viko je asi vzpricene.", 0);
+			$server->send_message($dst, "$nick: Pokusil jsi se otevrit jednu z krabic, ale viko je asi vzpricene.", 0);
 			return;
 		}
-		$server->send_message($channel, "$nick: Otevrel jsi krabici na $lev. polici pozice $pos.", 0);
+		$server->send_message($dst, "$nick: Otevrel jsi krabici na $lev. polici pozice $pos.", 0);
 	} else {
-		$server->send_message($channel, "$nick: Chvili jsi se prohraboval odpadem kolem popelnic, az jsi konecne narazil na neco zajimaveho.", 0);
+		$server->send_message($dst, "$nick: Chvili jsi se prohraboval odpadem kolem popelnic, az jsi konecne narazil na neco zajimaveho.", 0);
 	}
 
 	# Get the good stuff
@@ -60,9 +62,10 @@ sub on_public {
 	# Word wrapping, perl style
 	# my $width = 380;
 	# $str =~ s/(?:^|\G\n?)(?:(.{1,$width})(?:\s|\n|$)|(\S{$width})|\n)/$1$2\n/sg;
-	$server->send_message($channel, "$nick: $str", 0);
+	$server->send_message($dst, "$nick: $str", 0);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

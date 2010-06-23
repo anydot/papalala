@@ -17,9 +17,11 @@ $VERSION = '0.01';
 
 our ($lastt) = 0;
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 	my $answer;
 	my @parts;
 
@@ -50,9 +52,10 @@ sub on_public {
 		}
 	}
 
-	$server->send_message($channel, "$nick: $answer", 0);
+	$server->send_message($dst, "$nick: $answer", 0);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

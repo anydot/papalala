@@ -21,15 +21,17 @@ $VERSION = '0.01';
 
 our $megahal;
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $mynick = $server->{nick};
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 	my $request;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
 
 	return unless $message =~ /^\s*$mynick[,:]\s*(.*)$/i;
-	$server->send_message($channel, "$nick: ".megahal_response($1), 0); # send back to channel
+	$server->send_message($dst, "$nick: ".megahal_response($1), 0);
 }
 
 sub megahal_response {
@@ -62,7 +64,8 @@ sub megahal_connect {
 	);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_megahal', 'localhost:4566');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
