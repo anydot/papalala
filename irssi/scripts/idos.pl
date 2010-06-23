@@ -4,6 +4,7 @@ use warnings;
 use Irssi;
 use lib qw(.);
 use IDOS;
+use WWW::Shorten "Metamark", ":short";
 
 use vars qw($VERSION %IRSSI);
 
@@ -80,7 +81,8 @@ sub on_msg {
 			$o .= sprintf '%s -- %s%s <%s> %s -- ', $c->origin(), $c->note() ? sprintf('[%s] ', $c->note()) : '', $c->start(), $c->by(), $c->stop();
 		}
 		$o .= sprintf '%s ', $cl->[$#$cl]->dest() if $#$cl >= 0;
-		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())), $res->detail();
+		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())),
+			short_link($res->detail());
 		$server->send_message($dst, "$nick: $o", 0);
 	}
 }
