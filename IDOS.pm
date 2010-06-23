@@ -26,7 +26,7 @@ sub execute {
 			$val =~ s#/\?&=##g; ("$_=$val")
 		}
 	} keys %qpar;
-	my $uri = "http://www.idos.cz/".$self->region()."/?".join('&', @qpar, 'submit=1');
+	my $uri = "http://www.idos.cz/".$self->region()."/?".join('&', 'af=true', @qpar, 'submit=1');
 
 	use LWP::UserAgent;
 	use HTTP::Request;
