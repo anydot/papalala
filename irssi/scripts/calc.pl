@@ -46,6 +46,7 @@ sub on_msg {
 		$compartment->permit(qw(padsv padav padhv padany)); # private variables
 		$compartment->permit(qw(pushre regcmaybe regcreset regcomp subst substcont)); # re
 		$compartment->permit(qw(crypt sprintf)); # strings
+		$compartment->permit(qw(entergiven leavegiven enterwhen leavewhen break continue smartmatch)); # new features
 		$compartment->deny(qw(warn die)); # stderr pollution
 		$compartment->share_from('List::Util', [qw(first max maxstr min minstr reduce shuffle sum)]);
 		$compartment->share_from('List::MoreUtils', [qw(any all none notall true false firstidx first_index lastidx last_index insert_after insert_after_string apply after after_incl before before_incl indexes firstval first_value lastval last_value each_array each_arrayref pairwise natatime mesh zip uniq minmax)]);
