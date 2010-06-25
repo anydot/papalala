@@ -1,0 +1,22 @@
+This is the papalala irssi-based IRC bot platform. That means,
+a collection of irssi scripts providing various IRC services, and some
+supporting infrastructure.
+
+To run this thing, symlink everything in irssi/ to ~/.irssi/ and run
+irssi from the root directory of this tree.
+
+irssi/         - the scripts themselves
+old/           - just ignore, previous non-irssi approach to papalala
+
+build_brain.pl - Megahal training from logs (by default, Megahal is
+                 trained from conversations with it)
+filter_logs.pl - Megahal log preprocessing for build_brain.pl
+update_ban.pl  - Megahal automatic word banlist extraction from logs
+megahal_tcp.pl - Megahal server for the megahal script; must be running
+                 for Megahal to work
+
+wordstats.sql  - SQL schema for the wordstats script; feed sqlite to
+                 initialize the database
+wordstats_import.pl - Import eggdrop mod_stats to wordstats database
+
+IDOS.pm        - classes for the idos script
