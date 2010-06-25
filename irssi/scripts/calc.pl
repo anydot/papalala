@@ -51,9 +51,9 @@ sub on_msg {
 		$compartment->share_from('List::Util', [qw(first max maxstr min minstr reduce shuffle sum)]);
 		$compartment->share_from('List::MoreUtils', [qw(any all none notall true false firstidx first_index lastidx last_index insert_after insert_after_string apply after after_incl before before_incl indexes firstval first_value lastval last_value each_array each_arrayref pairwise natatime mesh zip uniq minmax)]);
 
-		my $result = $compartment->reval($message);
-		if(defined $result) {
-			print $wh "$result\n";
+		my (@result) = ($compartment->reval($message));
+		if(defined $result[0]) {
+			print $wh join(', ', @result)."\n";
 		} else {
 			print $wh "N/A ($@)\n";
 		}
