@@ -53,9 +53,9 @@ sub on_msg {
 
 		my $result = $compartment->reval($message);
 		if(defined $result) {
-			print $wh $result;
+			print $wh "$result\n";
 		} else {
-			print $wh "N/A ($@)";
+			print $wh "N/A ($@)\n";
 		}
 
 		close $wh;
@@ -66,6 +66,7 @@ sub on_msg {
 	close $wh;
 
 	my $result = <$rh>;
+	chomp $result;
 	$result //= "N/A";
 	$result =~ s/[\x00\x0a\x0c\x0d]/./g;
 
