@@ -7,6 +7,7 @@ use BSD::Resource;
 use POSIX qw/:sys_wait_h raise/;
 use List::Util;
 use List::MoreUtils;
+use 5.10.0;
 
 use vars qw($VERSION %IRSSI);
 
