@@ -8,6 +8,7 @@ use Irssi;
 use Irssi::Irc;
 
 use IO::Socket::INET;
+use Time::HiRes qw(usleep gettimeofday tv_interval);
 
 use vars qw($VERSION %IRSSI);
 
@@ -32,14 +33,15 @@ sub on_msg {
 	return unless $message =~ /^\s*$mynick[,:]\s*(.*)$/i;
 
 	# Ensure we do not reply ridiculously quickly:
-	my $delay = Irssi::settings_get_str('bot_megahal_mindelay');
-	use Time::HiRes qw(usleep gettimeofday tv_interval);
+	my $delay = Irssi::settings_get_int('bot_megahal_mindelay');
 	my $t0 = [gettimeofday()];
 
 	my $response = megahal_response($1);
 
 	my $dt = tv_interval($t0, [gettimeofday()]) * 1000000;
-	$dt >= $delay or usleep($delay - $dt);
+
+	usleep($delay - $dt)
+		if $dt < $delay;
 
 	$server->send_message($dst, "$nick: $response", 0);
 }
@@ -80,4 +82,4 @@ Irssi::signal_add('message private', 'on_msg');
 Irssi::settings_add_str('bot', 'bot_megahal', 'localhost:4566');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
 # minimal response time in microseconds
-Irssi::settings_add_str('bot', 'bot_megahal_mindelay', 0);
+Irssi::settings_add_int('bot', 'bot_megahal_mindelay', 0);
