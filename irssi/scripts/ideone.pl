@@ -107,8 +107,8 @@ sub ideone {
 
 
 	my %preludes = ( 
-			 '34'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
-			 '11'  => "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
+			 '34'  => "#define _GNU_SOURCE 1\n#include <stdbool.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
+			 '11'  => "#define _GNU_SOURCE 1\n#include <stdbool.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <math.h>\n#include <limits.h>\n#include <sys/types.h>\n#include <stdint.h>\n",
 			 '1'   => "#include <iostream>\n#include <cstdio>\n",
 		       );
 
@@ -316,16 +316,19 @@ sub ideone {
 
 }
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	return unless $message =~ s/^${cp}cc\b//;
 
 	my $result = ideone($nick, $message);
-	$server->send_message($channel, "$result", 0);
+	$server->send_message($dst, "$result", 0);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');

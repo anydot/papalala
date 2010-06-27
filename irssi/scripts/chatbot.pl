@@ -21,15 +21,27 @@ $VERSION = '0.01';
 
 our $megahal;
 
-sub on_public {
+sub on_msg {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $mynick = $server->{nick};
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 	my $request;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
-
 	return unless $message =~ /^\s*$mynick[,:]\s*(.*)$/i;
-	$server->send_message($channel, "$nick: ".megahal_response($1), 0); # send back to channel
+
+	# Ensure we do not reply ridiculously quickly:
+	my $delay = Irssi::settings_get_str('bot_megahal_mindelay');
+	use Time::HiRes qw(usleep gettimeofday tv_interval);
+	my $t0 = [gettimeofday()];
+
+	my $response = megahal_response($1);
+
+	my $dt = tv_interval($t0, [gettimeofday()]) * 1000000;
+	$dt >= $delay or usleep($delay - $dt);
+
+	$server->send_message($dst, "$nick: $response", 0);
 }
 
 sub megahal_response {
@@ -62,7 +74,10 @@ sub megahal_connect {
 	);
 }
 
-Irssi::signal_add('message public', 'on_public');
+Irssi::signal_add('message public', 'on_msg');
+Irssi::signal_add('message private', 'on_msg');
 
 Irssi::settings_add_str('bot', 'bot_megahal', 'localhost:4566');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
+# minimal response time in microseconds
+Irssi::settings_add_str('bot', 'bot_megahal_mindelay', 0);
