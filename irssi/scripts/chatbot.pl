@@ -30,13 +30,16 @@ sub on_msg {
 	my $request;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
-	return unless $message =~ /^\s*$mynick[,:]\s*(.*)$/i;
+	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
+		return if (int(rand(Irssi::settings_get_int('bot_megahal_triggerchance'))));
+		# With very small chance, we will reply to the user.
+	}
 
 	# Ensure we do not reply ridiculously quickly:
 	my $delay = Irssi::settings_get_int('bot_megahal_mindelay');
 	my $t0 = [gettimeofday()];
 
-	my $response = megahal_response($1);
+	my $response = megahal_response($message);
 
 	my $dt = tv_interval($t0, [gettimeofday()]) * 1000000;
 
@@ -83,3 +86,4 @@ Irssi::settings_add_str('bot', 'bot_megahal', 'localhost:4566');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
 # minimal response time in microseconds
 Irssi::settings_add_int('bot', 'bot_megahal_mindelay', 0);
+Irssi::settings_add_int('bot', 'bot_megahal_triggerchance', 1000);
