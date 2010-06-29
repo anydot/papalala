@@ -6,7 +6,6 @@ To run this thing, symlink everything in irssi/ to ~/.irssi/ and run
 irssi from the root directory of this tree.
 
 irssi/         - the scripts themselves
-old/           - just ignore, previous non-irssi approach to papalala
 
 build_brain.pl - Megahal training from logs (by default, Megahal is
                  trained from conversations with it)
