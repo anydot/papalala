@@ -24,16 +24,27 @@ our $stats = Stats->new("$irssidir/wordstats.sqlite3");
 sub event_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my $cp = Irssi::settings_get_str('bot_cmd_prefix');
+	my $isprivate = !defined $channel;
+	my $dst = $isprivate ? $nick : $channel;
 
 	my $user = $nick; # TODO
 	my %times = (t => int((time - 5*3600) / 86400) * 86400 + 5*3600, # times{t}: last 5am
 		w => time - 7*86400, m => time - 31*86400, y => time - 365*86400);
 	my %pnames = ('' => '', t => ' today', w => ' this week', m => ' this month', y => ' this year');
 
+	if (not defined $channel) {
+		$channel = $1 if ($message =~ s/\s+(#\S+)/ /);
+	}
+
+	$message =~ s/\s*$//;
 	if ($message =~ /^${cp}([twmy]?)(top[123]0|stat|stathelp)(?:\s+(\S+))?$/) {
 		my ($period, $cmd, $param) = ($1, $2, $3);
 		my $since = $period ? $times{$period} : 0;
 		my @slabels = $stats->rows(); $slabels[&Stats::SECONDS] = "time";
+		if (not defined $channel) {
+			$server->send_message($dst, "Speak o' guru, what channel do you want stats for?", 0);
+			return;
+		}
 		if ($cmd eq 'stat') {
 			$user = $param if $param;
 			# create empty stats record for the user in order
@@ -42,13 +53,13 @@ sub event_public {
 
 			my @stats = $stats->ustat($user, $channel, $since);
 			if (not defined $stats[0]) {
-				$server->send_message($channel, "$user: no such file or directory", 0);
+				$server->send_message($dst, "$user: no such file or directory", 0);
 			} else {
 				$stats[&Stats::SECONDS] = format_time($stats[&Stats::SECONDS]);
 				$slabels[&Stats::SECONDS] = "time spent";
 				@stats = map { $stats[$_] . ' ' . $slabels[$_] } 0..$#stats;
 				my $vocab = $stats->uvocab($user, $channel, $since);
-				$server->send_message($channel, "$user$pnames{$period}: ".join(', ', @stats).", vocabulary $vocab words", 0);
+				$server->send_message($dst, "$user$pnames{$period}: ".join(', ', @stats).", vocabulary $vocab words", 0);
 			}
 
 		} elsif ($cmd =~ /top([123]0)/) {
@@ -71,16 +82,18 @@ sub event_public {
 			$a = $e-9;
 			my $msg = join(', ', map { sprintf '%d. %s (%s)', $a++, $_->[0], $_->[1] } @top);
 
-			$server->send_message($channel, "Top$e $cat$pnames{$period} ($channel): $msg", 0);
+			$server->send_message($dst, "Top$e $cat$pnames{$period} ($channel): $msg", 0);
 
 		} elsif ($cmd eq 'stathelp') {
-			$server->send_message($channel, "[twmy](top10,20,30|stat|stathelp) <".join(' ',@slabels,'vocabulary').">", 0);
+			$server->send_message($dst, "[twmy](top10,20,30|stat|stathelp) <".join(' ',@slabels,'vocabulary').">", 0);
 
 		} else {
-			$server->send_message($channel, "$user: brm", 0);
+			$server->send_message($dst, "$user: brm", 0);
 		}
 		return;
 	}
+
+	return unless $channel;
 
 	my @ustats = $stats->ustat($user, $channel, $times{t});
 	my @stats = $stats->zstats();
@@ -217,6 +230,7 @@ sub format_time {
 }
 
 Irssi::signal_add_last('message public', 'event_public');
+Irssi::signal_add_last('message private', 'event_public');
 Irssi::signal_add_last('event mode', 'event_mode');
 Irssi::signal_add_last('event kick', 'event_kick');
 Irssi::signal_add_last('event topic', 'event_topic');
