@@ -4,6 +4,7 @@ use warnings;
 use Irssi;
 use Irssi::Irc;
 use Digest::SHA1 qw/sha1/;
+use List::MoreUtils qw/uniq/;
 
 use vars qw($VERSION %IRSSI);
 
@@ -29,12 +30,13 @@ sub on_public {
 		$lastt = $time;
 	}
 
-	@parts = split(/\s*--+\s*/, $message);
 
 	$message = lc($message);
 	$message =~ s/\W+//g;
 
-	my $hash = sha1($message . $lastt);
+	@parts = sort uniq split(/\s*--+\s*/, $message);
+
+	my $hash = sha1("@parts $lastt");
 	my ($number) = unpack("S", $hash);
 
 	if (@parts > 1) {
