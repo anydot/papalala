@@ -85,7 +85,7 @@ sub on_msg {
 		}
 		$o .= sprintf '%s ', $cl->[$#$cl]->dest() if $#$cl >= 0;
 		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())),
-			short_link($res->detail());
+			(defined $res->detail() ? short_link($res->detail()) : '');
 		$server->send_message($dst, "$nick: $o", 0);
 	}
 }
