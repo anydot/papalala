@@ -78,7 +78,10 @@ sub on_msg {
 		$o = sprintf '[%s %s] ', $res->time(), $res->date(), $res->traveltime(), $res->traveldist(), $res->cost();
 		for (0..$#$cl) {
 			my $c = $cl->[$_];
-			$o .= sprintf '%s -- %s%s <%s> %s -- ', $c->origin(), $c->note() ? sprintf('[%s] ', $c->note()) : '', $c->start(), $c->by(), $c->stop();
+			my $Cdark = "\3".'14';
+			my $Cblue = "\3".'12';
+			my $Creset = "\3";
+			$o .= sprintf '%s %s--%s %s%s %s<%s>%s %s %s--%s ', $c->origin(), $Cdark, $Creset, $c->note() ? sprintf('[%s] ', $c->note()) : '', $c->start(), $Cblue, $c->by(), $Creset, $c->stop(), $Cdark, $Creset;
 		}
 		$o .= sprintf '%s ', $cl->[$#$cl]->dest() if $#$cl >= 0;
 		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())),
