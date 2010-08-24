@@ -93,7 +93,8 @@ sub event_public {
 		return;
 	}
 
-	return unless $channel;
+	return
+		if $isprivate;
 
 	my @ustats = $stats->ustat($user, $channel, $times{t});
 	my @stats = $stats->zstats();
