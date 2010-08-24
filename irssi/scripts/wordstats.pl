@@ -118,7 +118,11 @@ sub event_public {
 	$stats->{dbh}->do('COMMIT TRANSACTION');
 
 	my @ustats2 = $stats->ustat($user, $channel, $times{t});
-	my $cheerchannel = grep {lc $channel eq lc $_} split(/\s/, Irssi::settings_get_str("bot_cheer_channels"));
+
+	my $cheerchannel = 1;
+	if (Irssi::settings_get_str("bot_cheer_channels")) {
+		$cheerchannel = grep {lc $channel eq lc $_} split(/\s/, Irssi::settings_get_str("bot_cheer_channels"));
+	}
 
 	if ($cheerchannel && defined $ustats[&Stats::WORDS] and
 	    int($ustats2[&Stats::WORDS] / 1000) > int($ustats[&Stats::WORDS] / 1000)) {
@@ -239,7 +243,7 @@ Irssi::signal_add_last('event topic', 'event_topic');
 Irssi::signal_add_last('ctcp action', 'event_action');
 
 Irssi::settings_add_str('bot', 'bot_cmd_prefix', '`');
-Irssi::settings_add_str('bot', 'bot_cheer_channels', '#programatori');
+Irssi::settings_add_str('bot', 'bot_cheer_channels', '');
 
 1;
 
