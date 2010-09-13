@@ -24,18 +24,18 @@ our $selectall = $dbh->prepare("SELECT DISTINCT url FROM link WHERE url LIKE ? O
 
 sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
-	my $private = !defined $channel;
+	my $isprivate = !defined $channel;
 
-	return unless !defined $channel or grep {$channel eq $_} split(/ /, Irssi::settings_get_str('bot_link_channels'));
+	return unless $isprivate or grep {$channel eq $_} split(/ /, Irssi::settings_get_str('bot_link_channels'));
 
-	if ($message =~ /^[`!]l(?:ink)?\s*(.*)$/) {
+	if ($message =~ /^[`!]l(?:ink)?(?:\s+(.*))?$/) {
 		my $query = $1;
 		my $postfix;
 		my $maxlen = 497; ## 510 - length of ":! PRIVMSG :"
 		my $msg = "$nick:";
 		my $st;
 
-		if ($private) {
+		if ($isprivate) {
 			($channel, $query) = split /\s/, $query, 2;
 
 			$query //= '';
@@ -71,9 +71,9 @@ sub on_public {
 
 		$msg .= $postfix;
 
-		$server->send_message($private ? $nick : $channel, $msg, 0);
+		$server->send_message($isprivate ? $nick : $channel, $msg, 0);
 	}
-	elsif (!$private) {
+	elsif (!$isprivate) {
 		while ($message =~ /((?:https?|ftp):\/\/\S+)/gi) {
 			$insert->execute(lc $channel, $1);
 		}
