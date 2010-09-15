@@ -95,8 +95,8 @@ our %languages = (
 sub ideone {
 	my ($nick, $code) = @_;
 
-	my $user = 'test';
-	my $pass = 'test';
+	my $user = 'pasky';
+	my $pass = 'brmbrm';
 	my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 	my $result;
 
