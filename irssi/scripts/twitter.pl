@@ -4,6 +4,7 @@ use warnings;
 use Irssi;
 use Irssi::Irc;
 use Net::Twitter;
+use Encode;
 
 use vars qw($VERSION %IRSSI $twitter $cp);
 
@@ -47,7 +48,10 @@ sub on_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
 	my ($twmsg);
 
-	return unless ($twmsg) = $message =~ /^${cp}tw(?:itter)?(?:\s+(.+))?$/;
+	return
+		unless ($twmsg) = $message =~ /^${cp}tw(?:itter)?(?:\s+(.+))?$/;
+
+	$twmsg = decode_utf8 $twmsg;
 
 	if (!defined $twitter) {
 		$server->send_message($channel, "$nick: Neinicializovany twitter, smula", 0);
