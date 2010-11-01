@@ -16,7 +16,9 @@ $VERSION = '0.01';
 	description => "allows for posting small messages directly from IRC",
 );
 
-sub initialize {
+sub on_setup_changed {
+	$cp = Irssi::settings_get_str('bot_cmd_prefix');
+
 	my ($c_key, $c_secret, $a_token, $a_secret) = (
 		Irssi::settings_get_str('bot_twitter_consumer_key'),
 		Irssi::settings_get_str('bot_twitter_consumer_secret'),
@@ -36,12 +38,6 @@ sub initialize {
 			$twitter->access_token_secret($a_secret);
 		}
 	}
-}
-
-sub on_setup_changed {
-	$cp = Irssi::settings_get_str('bot_cmd_prefix');
-
-	initialize;
 }
 
 sub on_public {
