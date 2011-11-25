@@ -275,7 +275,7 @@ sub new {
 
 	$self->{qgetstat} = $self->{dbh}->prepare("SELECT sum(letters), sum(words), sum(actions), sum(smileys), sum(kicks), sum(modes), sum(topics), sum(seconds) FROM stats WHERE user = ? AND channel = ? AND network = ? AND time > ? AND time + timespan < ?");
 	foreach (rows()) {
-		$self->{"qtopstat$_"} = $self->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time > ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
+		$self->{"qtopstat$_"} = $self->{dbh}->prepare("SELECT user, sum($_) AS s FROM stats WHERE channel = ? AND network = ? AND time >= ? AND time + timespan < ? GROUP BY user ORDER BY s DESC LIMIT ?");
 	}
 
 	$self->{qgetvocab} = $self->{dbh}->prepare("SELECT count(*) FROM words WHERE user = ? AND channel = ? AND network = ? AND last > ?");
