@@ -75,7 +75,7 @@ sub on_msg {
 		next unless $res;
 		my $cl = $res->connections();
 		my $o = "";
-		$o = sprintf '[%s %s] ', $res->time(), $res->date(), $res->traveltime(), $res->traveldist(), $res->cost();
+		$o = sprintf '[%s %s] ', $res->time(), $res->date();
 		for (0..$#$cl) {
 			my $c = $cl->[$_];
 			my $Cdark = "\3".'14';
