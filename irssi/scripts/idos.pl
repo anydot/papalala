@@ -84,8 +84,8 @@ sub on_msg {
 			$o .= sprintf '%s %s--%s %s%s %s<%s>%s %s %s--%s ', $c->origin(), $Cdark, $Creset, $c->note() ? sprintf('[%s] ', $c->note()) : '', $c->start(), $Cblue, $c->by(), $Creset, $c->stop(), $Cdark, $Creset;
 		}
 		$o .= sprintf '%s ', $cl->[$#$cl]->dest() if $#$cl >= 0;
-		$o .= sprintf '[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())),
-			(defined $res->detail() ? short_link($res->detail()) : '');
+		$o .= sprintf('[%s] %s', join(', ', grep { defined $_ } ($res->traveltime(), $res->traveldist(), $res->cost())),
+			($res->detail() ? short_link($res->detail()) : ''));
 		$server->send_message($dst, "$nick: $o", 0);
 	}
 }
