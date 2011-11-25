@@ -31,7 +31,10 @@ sub on_msg {
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
-		return if (int(rand(Irssi::settings_get_int('bot_megahal_triggerchance'))));
+		return
+			unless Irssi::settings_get_int('bot_megahal_triggerchance');
+		return
+			if (int(rand(Irssi::settings_get_int('bot_megahal_triggerchance'))));
 		# With very small chance, we will reply to the user.
 	}
 
