@@ -78,6 +78,7 @@ sub execute {
 				if ($places[$_]->{line} =~ /esun/) {
 					($d, $a) = ($places[$_]->{arrival}, $places[$_+1]->{departure});
 				}
+				$places[$_]->{line} ||= 'wtf';
 				my %r = (
 					'start' => $d, 'origin' => $places[$_]->{place},
 					'stop' => $a, 'dest' => $places[$_+1]->{place},
