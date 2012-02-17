@@ -95,8 +95,8 @@ our %languages = (
 sub ideone {
 	my ($nick, $code) = @_;
 
-	my $user = 'test';
-	my $pass = 'test';
+	my $user = 'pasky';
+	my $pass = 'brmbrm';
 	my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 	my $result;
 
@@ -191,20 +191,20 @@ sub ideone {
 	$code =~ s/\s+$//;
 
 	$result = get_result($soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1));
-	return $emsg unless defined $result;
+	return "create: $emsg" unless defined $result;
 
 	my $url = $result->{link};
 
 # wait for compilation/execution to complete
 	while(1) {
 	  $result = get_result($soap->getSubmissionStatus($user, $pass, $url));
-	  return $emsg unless defined $result;
+	  return "submit: $emsg" unless defined $result;
 	  last if $result->{status} == 0;
 	  sleep 1;
 	}
 
 	$result = get_result($soap->getSubmissionDetails($user, $pass, $url, 0, 0, 1, 1, 1));
-	return $emsg unless defined $result;
+	return "result: $emsg" unless defined $result;
 
 	my $COMPILER_ERROR = 11;
 	my $RUNTIME_ERROR = 12;
@@ -291,7 +291,7 @@ sub ideone {
 	    return undef;
 	  } else {
 	    if($result->result->{error} ne "OK") {
-	      $emsg = $result->result->{error};
+	      $emsg = join(", ", map { "$_: " . $result->result->{error}->{$_} } keys %{$result->result->{error}});
 	      return undef;
 	    } else {
 	      return $result->result;
