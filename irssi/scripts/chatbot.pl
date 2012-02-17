@@ -30,8 +30,8 @@ sub on_msg {
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
 
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
-		if (!$trigger_chance or int(rand(Irssi::settings_get_int('bot_megahal_triggerchance')))) {
-			$hailo->learn($message);
+		if (!$trigger_chance or int(rand($trigger_chance))) {
+			Irssi::settings_get_bool('bot_megahal_learn_from_all') and $hailo->learn($message);
 			return;
 		}
 	}
@@ -56,6 +56,7 @@ Irssi::signal_add('message private', 'on_msg');
 Irssi::settings_add_str('bot', 'bot_megahal_ignore', '');
 # minimal response time in microseconds
 Irssi::settings_add_int('bot', 'bot_megahal_mindelay', 0);
+Irssi::settings_add_bool('bot', 'bot_megahal_learn_from_all', 1);
 Irssi::settings_add_int('bot', 'bot_megahal_triggerchance', 1000);
 
 ##
