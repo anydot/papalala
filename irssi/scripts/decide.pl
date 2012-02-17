@@ -27,7 +27,7 @@ sub on_msg {
 
 	return unless $message =~ s/^${cp}decide\s*//;
 	my $time = time();
-	if ($time - $lastt > 60*60*48) {
+	if ($time - $lastt > 300) {
 		$lastt = $time;
 	}
 
