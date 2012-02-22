@@ -31,7 +31,7 @@ sub on_msg {
 
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
 		if (!$trigger_chance or int(rand($trigger_chance))) {
-			$message =~ s/^\w+[:, ]+//;
+			$message =~ s/^\s*\w+[,:]\s*//;
 			Irssi::settings_get_bool('bot_megahal_learn_from_all') and $hailo->learn($message);
 			return;
 		}
