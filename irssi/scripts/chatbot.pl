@@ -26,12 +26,14 @@ sub on_msg {
 	my $dst = $isprivate ? $nick : $channel;
 	my $trigger_chance = Irssi::settings_get_int('bot_megahal_triggerchance');
 	my $request;
+	my $want_learn = 1;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
 
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
+		$want_learn = 0;
+		$message =~ s/^\s*\w+[,:]\s*//;
 		if (!$trigger_chance or int(rand($trigger_chance))) {
-			$message =~ s/^\s*\w+[,:]\s*//;
 			Irssi::settings_get_bool('bot_megahal_learn_from_all') and $hailo->learn($message);
 			return;
 		}
@@ -42,7 +44,7 @@ sub on_msg {
 	my $t0 = [gettimeofday()];
 
 	my $response = $hailo->reply($message);
-	$hailo->learn($message);
+	$want_learn and $hailo->learn($message);
 
 	my $dt = tv_interval($t0, [gettimeofday()]) * 1000000;
 
