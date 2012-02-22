@@ -40,7 +40,8 @@ sub on_msg {
 	my $delay = Irssi::settings_get_int('bot_megahal_mindelay');
 	my $t0 = [gettimeofday()];
 
-	my $response = $hailo->learn_reply($message);
+	my $response = $hailo->reply($message);
+	$hailo->learn($message);
 
 	my $dt = tv_interval($t0, [gettimeofday()]) * 1000000;
 
