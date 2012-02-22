@@ -31,10 +31,13 @@ sub on_msg {
 
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
 		if (!$trigger_chance or int(rand($trigger_chance))) {
+			$message =~ s/^\w+[:, ]+//;
 			Irssi::settings_get_bool('bot_megahal_learn_from_all') and $hailo->learn($message);
 			return;
 		}
 	}
+
+	$message =~ s/^\w+[:,]+\s*//;
 
 	# Ensure we do not reply ridiculously quickly:
 	my $delay = Irssi::settings_get_int('bot_megahal_mindelay');
