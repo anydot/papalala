@@ -37,8 +37,6 @@ sub on_msg {
 		}
 	}
 
-	$message =~ s/^\w+[:,]+\s*//;
-
 	# Ensure we do not reply ridiculously quickly:
 	my $delay = Irssi::settings_get_int('bot_megahal_mindelay');
 	my $t0 = [gettimeofday()];
