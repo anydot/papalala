@@ -12,6 +12,7 @@ $SOAP::Constants::DO_NOT_USE_XML_PARSER = 1;
 use IPC::Open2;
 use HTML::Entities;
 use Text::Balanced qw(extract_codeblock extract_delimited);
+use Try::Tiny;
 
 use vars qw($VERSION %IRSSI);
 
@@ -23,8 +24,6 @@ $VERSION = '0.01';
     license     => 'BSD',
 );
 
-
-our $emsg;
 
 our %languages = (
   'Ada'                          => { 'id' =>    '7', 'name' => 'Ada (gnat-4.3.2)'                                 },
@@ -99,6 +98,7 @@ sub ideone {
 	my $pass = 'brmbrm';
 	my $soap = SOAP::Lite->new(proxy => 'http://ideone.com/api/1/service');
 	my $result;
+	my $emsg;
 
 	my $MAX_UNDO_HISTORY = 100;
 
@@ -190,20 +190,20 @@ sub ideone {
 	$code =~ s/^\s+//;
 	$code =~ s/\s+$//;
 
-	$result = get_result($soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1));
+	($result, $emsg) = get_result(sub {$soap->createSubmission($user, $pass, $code, $languages{$lang}{'id'}, $input, 1, 1)});
 	return "create: $emsg" unless defined $result;
 
 	my $url = $result->{link};
 
 # wait for compilation/execution to complete
 	while(1) {
-	  $result = get_result($soap->getSubmissionStatus($user, $pass, $url));
+	  ($result, $emsg) = get_result(sub {$soap->getSubmissionStatus($user, $pass, $url)});
 	  return "submit: $emsg" unless defined $result;
 	  last if $result->{status} == 0;
 	  sleep 1;
 	}
 
-	$result = get_result($soap->getSubmissionDetails($user, $pass, $url, 0, 0, 1, 1, 1));
+	($result, $emsg) = get_result(sub {$soap->getSubmissionDetails($user, $pass, $url, 0, 0, 1, 1, 1)});
 	return "result: $emsg" unless defined $result;
 
 	my $COMPILER_ERROR = 11;
@@ -284,19 +284,31 @@ sub ideone {
 # ---------------------------------------------
 
 	sub get_result {
-	  my $result = shift @_;
+		my $resultfunc = shift @_;
+		my $result;
+		my $emsg;
 
-	  if($result->fault) {
-	    $emsg = join ', ', $result->faultcode, $result->faultstring, $result->faultdetail;
-	    return undef;
-	  } else {
-	    if($result->result->{error} ne "OK") {
-	      $emsg = join(", ", map { "$_: " . $result->result->{error}->{$_} } keys %{$result->result->{error}});
-	      return undef;
-	    } else {
-	      return $result->result;
-	    }
-	  }
+		try {
+			$result = $resultfunc->();
+		}
+		catch {
+			print FILE "Error: $_\n";
+			$result = undef;
+		};
+
+		if (! defined $result) {
+			$emsg = "Try again later";
+		} elsif ($result->fault) {
+			$emsg = join ', ', $result->faultcode, $result->faultstring, $result->faultdetail;
+		} else {
+			if($result->result->{error} ne "OK") {
+				$emsg = join(", ", map { "$_: " . $result->result->{error}->{$_} } keys %{$result->result->{error}});
+			} else {
+				return $result->result;
+			}
+		}
+
+		return ((defined $emsg ? undef : $result->result), $emsg);
 	}
 
 	sub pretty {
