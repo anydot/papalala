@@ -1,6 +1,7 @@
 package IDOS::RouteQuery;
 
 # This class handles IDOS route queries.
+# API: http://www.chaps.cz/idos-moznost-vyuziti-odkazu.asp
 
 use Moose;
 use Moose::Util::TypeConstraints;
@@ -12,7 +13,7 @@ has 'region' => (is => 'rw', isa => 'Region', required => 1);
 has 'origin' => (is => 'rw', isa => 'Str', required => 1);
 has 'dest' => (is => 'rw', isa => 'Str', required => 1);
 has 'thru' => (is => 'rw', isa => 'Str');
-# has 'when' => (is => 'rw', isa => 'Str', default => sub { time });
+has 'later' => (is => 'rw', isa => 'Num', default => 0); # number of minutes after now
 
 sub execute {
 	my $self = shift;
@@ -20,6 +21,12 @@ sub execute {
 	my @routes;
 
 	my %qpar = (f => $self->origin(), t => $self->dest(), v => $self->thru());
+	if ($self->later() > 0) {
+		my @t0 = localtime(time);
+		my @t1 = localtime(time + $self->later() * 60);
+		$qpar{date} = sprintf('%d.%d.%04d', $t1[3], $t1[4] + 1, $t1[5] + 1900);
+		$qpar{time} = sprintf('%d:%02d', $t1[2], $t1[1]);
+	}
 	my @qpar = map {
 		my $val = $qpar{$_};
 		if (defined $val) {
@@ -78,6 +85,7 @@ sub execute {
 				if ($places[$_]->{line} =~ /esun/) {
 					($d, $a) = ($places[$_]->{arrival}, $places[$_+1]->{departure});
 				}
+				$places[$_]->{line} ||= 'wtf';
 				my %r = (
 					'start' => $d, 'origin' => $places[$_]->{place},
 					'stop' => $a, 'dest' => $places[$_+1]->{place},
