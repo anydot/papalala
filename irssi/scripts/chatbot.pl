@@ -4,6 +4,7 @@ use warnings;
 use Irssi;
 use Irssi::Irc;
 
+use Encode;
 use Time::HiRes qw(usleep gettimeofday tv_interval);
 use Hailo;
 
@@ -29,6 +30,8 @@ sub on_msg {
 	my $want_learn = 1;
 
 	return if grep {lc eq lc $nick} split(/ /, Irssi::settings_get_str('bot_megahal_ignore'));
+
+	$message = decode("utf8", $message);
 
 	if ($message !~ s/^\s*$mynick[,:]\s*(.*)$/$1/i) {
 		$want_learn = 0;
