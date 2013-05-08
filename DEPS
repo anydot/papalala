@@ -1,3 +1,4 @@
 Perl modules:
-Hailo
-Cstocs
+Net::Twitter (for twitter script)
+Hailo (for chatbot script)
+Cz::Cstocs
