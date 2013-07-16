@@ -42,7 +42,12 @@ sub execute {
 	my $request = HTTP::Request->new('GET', $uri);
 	my $response = $ua->request($request);
 	$response->is_success or die "Cannot get $uri";
-	my @data = split(/\n/, $response->decoded_content(charset=>'utf8'));
+	my $content = $response->decoded_content(charset=>'utf8');
+
+	# Eschew evilness.
+	$content =~ s#<table class="unitednote.*?</table>##sg;
+
+	my @data = split(/\n/, $content);
 	# print "ook? @data\n";
 	until (not $#data or $data[0] =~ /<!-- zobrazeni vysledku start -->/) {
 		shift @data;
@@ -82,6 +87,9 @@ sub execute {
 		} elsif ($data[0] =~ /^<\/table>/) {
 			my @conns = map {
 				my ($d, $a) = ($places[$_]->{departure}, $places[$_+1]->{arrival});
+				use Data::Dumper;
+				#print "this " . Dumper($places[$_]) . "\n";
+				#print "then " . Dumper($places[$_+1]) . "\n";
 				if ($places[$_]->{line} =~ /esun/) {
 					($d, $a) = ($places[$_]->{arrival}, $places[$_+1]->{departure});
 				}
