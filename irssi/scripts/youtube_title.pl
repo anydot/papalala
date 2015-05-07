@@ -1,6 +1,5 @@
 #!/usr/bin/perl
-# Modified (reply to channel) youtube_title script:
-# Copyright 2009 -- 2011, Olof Johansson <olof@ethup.se>
+# Copyright 2009-2012, 2014: Olof Johansson <olof@ethup.se>
 #
 # Copying and distribution of this file, with or without modification,
 # are permitted in any medium without royalty provided the copyright
@@ -16,10 +15,10 @@ use URI;
 use URI::QueryParam;
 use Regexp::Common qw/URI/;
 
-my $VERSION = '0.6x';
+my $VERSION = '0.71';
 
 my %IRSSI = (
-	authors     => 'Olof \'zibri\' Johansson',
+	authors     => 'Olof "zibri" Johansson',
 	contact     => 'olof@ethup.se',
 	name        => 'youtube-title',
 	uri         => 'https://github.com/olof/irssi-youtube-title',
@@ -36,13 +35,13 @@ sub callback {
 	$target=$nick if $target eq undef;
 
 	# process each youtube link in message
-	process($server, $target, $_) for (get_ids($msg)); 
+	process($server, $target, $_) for (get_ids($msg));
 }
 
 sub own_callback {
 	my($server, $msg, $target) = @_;
 
-	if(Irssi::settings_get_bool('yt_print_own')) { 
+	if(Irssi::settings_get_bool('yt_print_own')) {
 		callback($server, $msg, undef, undef, $target);
 	}
 }
@@ -50,7 +49,7 @@ sub own_callback {
 sub process {
 	my ($server, $target, $id) = @_;
 	my $yt = get_title($id);
-		
+
 	if(exists $yt->{error}) {
 		print_error($server, $target, $id, $yt->{error});
 	} else {
@@ -68,9 +67,9 @@ sub canon_domain {
 }
 
 sub normalize_domain {
-	my $_ = shift;
-	s/^www\.//;
-	return $_;
+	my $domain = shift;
+	$domain =~ s/^www\.//;
+	return $domain;
 }
 
 sub idextr_youtube_com {
@@ -109,13 +108,18 @@ sub get_ids {
 	return @ids;
 }
 
-# extract title using youtube api
-# http://code.google.com/apis/youtube/2.0/developers_guide_protocol.html
+# Extract title by scraping. This isn't ideal, but since youtube decided to
+# deprecate their xml based api v2.0, in favor for something requiring
+# registration to even do simple things like fetching metadata info, it
+# seems to be the only viable option.
+#
+# So scraping it is. Thanks youtube.
 sub get_title {
 	my($vid)=@_;
 
-	my $url = "http://gdata.youtube.com/feeds/api/videos/$vid";
-	
+	my $url = "http://youtube.com/watch?v=$vid";
+	#my $url = "http://gdata.youtube.com/feeds/api/videos/$vid";
+
 	my $ua = LWP::UserAgent->new();
 	$ua->agent("$IRSSI{name}/$VERSION (irssi)");
 	$ua->timeout(3);
@@ -123,46 +127,65 @@ sub get_title {
 
 	my $response = $ua->get($url);
 
-	if($response->code == 200) {
-		my $content = $response->decoded_content;
+	return {error => $response->message} if $response->code != 200;
 
-		my $xml = XMLin($content)->{'media:group'};
-		my $title = $xml->{'media:title'}->{content};
-		my $s = $xml->{'yt:duration'}->{seconds};
+	my $content = $response->decoded_content;
 
-		my $m = $s / 60;
-		my $d = sprintf "%d:%02d", $m, $s % 60;
+	my ($title) = $content =~ m{<meta name="title" content="([^"]+)">};
+	$title = decode_entities($title);
+	my ($durstr) = $content =~
+		m{<meta itemprop="duration" content="(PT[^"]+)">};
 
-		if($title) {
-			return {
-				title => $title,
-				duration => $d,
-			};
-		}
+	my $d = parse_durstr($durstr);
 
-		return {error => 'could not find title'};
+	if($title) {
+		return {
+			title => $title,
+			duration => $d,
+		};
 	}
-	
-	return {error => $response->message};
+
+	return {error => 'could not find title'};
+}
+
+sub parse_durstr {
+	my $durstr = shift;
+
+	# PT600M1S = 600 minutes,  1 second
+	# PT20M12S =  20 minutes, 12 seconds
+	# PT0M36S  =   0 minutes, 36 seconds
+
+	my ($h, $s) = $durstr =~ /^PT([0-9]+)M([0-9]+S)$/;
+	return sprintf "%d:%02d", $h, $s;
 }
 
 sub print_error {
-	my ($server, $target, $url, $msg) = @_;
-	$server->send_message($target, "[$url] Error fetching youtube title: $msg", 0);
+	my ($server, $target, $id, $msg) = @_;
+	$server->send_message($target, "[$id] Error fetching youtube title: $msg", 0);
+	#$server->window_item_find($target)->printformat(
+	#	MSGLEVEL_CLIENTCRAP, 'yt_error', $msg
+	#);
 }
 
 sub print_title {
-	my ($server, $target, $url, $title, $d) = @_;
+	my ($server, $target, $id, $title, $d) = @_;
 
 	$title = decode_entities($title);
 	$d = decode_entities($d);
 
-	$server->send_message($target, "[$url] $title ($d)", 0);
+	$server->send_message($target, "[$id] $title ($d)", 0);
+	#$server->window_item_find($target)->printformat(
+	#	MSGLEVEL_CLIENTCRAP, 'yt_ok', $title, $d
+	#);
 }
+
+Irssi::theme_register([
+	'yt_ok', '%yyoutube:%n $0 ($1)',
+	'yt_error', '%rError fetching youtube title:%n $0',
+]);
 
 Irssi::signal_add("message public", \&callback);
 Irssi::signal_add("message private", \&callback);
 
 Irssi::signal_add("message own_public", \&own_callback);
 Irssi::signal_add("message own_private", \&own_callback);
-
