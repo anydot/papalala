@@ -1,0 +1,6 @@
+handle=anydot%hosts=*!*anydot@isit.cz *!*anydot@ibawizard.net%globflags=Faompr%chanflags=%password=%comment=%
+handle=dev_null%hosts=*!bot@master.czau.net%globflags=%chanflags=#programatori,aoprFm,%password=%comment=%
+handle=Etingo%hosts=*!nyoxi@leeloo.ya.bofh.cz%globflags=%chanflags=#programatori,aoprFm,0%password=%comment=%
+handle=offtopic%hosts=*!*offtopic@222-136-158-212.bluetone.cz%globflags=%chanflags=#programatori,aoprFm,0%password=%comment=%
+handle=Papalala%hosts=*!papalala@isit.cz%globflags=Faompr%chanflags=%password=%comment=%
+handle=X0R%hosts=*!*irc@88.146.206.1%globflags=%chanflags=#programatori,aoprm,0%password=%comment=%

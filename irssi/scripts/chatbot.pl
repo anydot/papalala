@@ -64,5 +64,5 @@ Irssi::settings_add_bool('bot', 'bot_megahal_learn_from_all', 1);
 Irssi::settings_add_int('bot', 'bot_megahal_triggerchance', 1000);
 
 ##
-$hailo = Hailo->new(brain => Irssi::get_irssi_dir()."/papalala.brn");
+$hailo = Hailo->new(brain => Irssi::get_irssi_dir()."/data/papalala.brn");
 

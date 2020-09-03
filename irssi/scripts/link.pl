@@ -16,9 +16,9 @@ $VERSION = '0.01';
 );
 
 our $irssidir = Irssi::get_irssi_dir;
-our $dbh = DBI->connect("dbi:SQLite:dbname=$irssidir/link.sqlite3", "", "") or
+our $dbh = DBI->connect("dbi:SQLite:dbname=$irssidir/data/link.sqlite3", "", "") or
 	die ("Can't open DB: $!");
-our $insert = $dbh->prepare("INSERT INTO link(channel, url) VALUES(?, ?)");
+our $insert = $dbh->prepare("INSERT OR IGNORE INTO link(channel, url) VALUES(?, ?)");
 our $select = $dbh->prepare("SELECT DISTINCT url FROM link WHERE channel = ? AND url LIKE ? ORDER BY ROWID DESC LIMIT 51");
 our $selectall = $dbh->prepare("SELECT DISTINCT url FROM link WHERE url LIKE ? ORDER BY ROWID DESC LIMIT 51");
 

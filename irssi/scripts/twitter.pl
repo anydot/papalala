@@ -28,9 +28,10 @@ sub on_setup_changed {
 
 	if ($c_key && $c_secret) {
 		$twitter = Net::Twitter->new(
-			traits => ['API::REST', 'OAuth'],
+			traits => ['API::RESTv1_1', 'OAuth'],
 			consumer_key => $c_key,
 			consumer_secret => $c_secret,
+            ssl => 1,
 		);
 
 		if ($a_token && $a_secret) {

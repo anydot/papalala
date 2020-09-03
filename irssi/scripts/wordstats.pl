@@ -8,6 +8,7 @@ use warnings;
 
 use Irssi;
 use DBI;
+use File::Slurp qw/slurp/;
 
 use vars qw($VERSION %IRSSI);
 $VERSION = "0.0.1";
@@ -19,7 +20,7 @@ $VERSION = "0.0.1";
 );
 
 our $irssidir = Irssi::get_irssi_dir;
-our $stats = Stats->new("$irssidir/wordstats.sqlite3");
+our $stats = Stats->new("$irssidir/data/wordstats.sqlite3");
 
 sub event_public {
 	my ($server, $message, $nick, $hostmask, $channel) = @_;
@@ -268,6 +269,7 @@ sub new {
 
 	$self->{dbh} = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "") or
 		die ("Can't open DB: $!");
+
 	$self->{qupword} = $self->{dbh}->prepare("UPDATE words SET hits = hits + 1, last = ? WHERE user=? AND channel=? AND network=? AND word=?");
 	$self->{qrecword} = $self->{dbh}->prepare("INSERT INTO words (hits,last,user,channel,network,word) VALUES (1,?,?,?,?,?)");
 	$self->{qupstat} = $self->{dbh}->prepare("UPDATE stats SET letters=letters+?, words=words+?, actions=actions+?, smileys=smileys+?, kicks=kicks+?, modes=modes+?, topics=topics+?, seconds=seconds+? WHERE user=? AND channel=? AND network=? AND time=? AND timespan=?");

@@ -3,7 +3,7 @@ use warnings;
 
 use Irssi;
 use Irssi::Irc;
-use Digest::SHA1 qw/sha1/;
+use Digest::SHA qw/sha1/;
 
 use vars qw($VERSION %IRSSI);
 
